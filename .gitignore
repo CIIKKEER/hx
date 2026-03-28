@@ -2,3 +2,4 @@
 .project
 .settings/
 ghp_*
+vendor/
