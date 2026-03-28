@@ -1,0 +1,12 @@
+{
+	"autoload" : {
+		"psr-4" : {
+			"hx\\" : "src/hx"
+		}
+	},
+	"authors" : [{
+			"name" : "breezzeer",
+			"email" : "lch1025@qq.com"
+		}
+	]
+}
