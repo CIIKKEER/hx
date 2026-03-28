@@ -11,5 +11,9 @@
 	],
 	"name" : "ciikkeer/hx",
 	"license" : "MIT",
-	"description" : "php helper library"
+	"description" : "php helper library",
+	"type" : "library",
+	"keywords" : [
+		"php fast library"
+	]
 }
