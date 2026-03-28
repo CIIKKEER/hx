@@ -9,5 +9,7 @@
 			"email" : "lch1025@qq.com"
 		}
 	],
-	"name" : "ciikkeer/hx"
+	"name" : "ciikkeer/hx",
+	"license" : "MIT",
+	"description" : "php helper library"
 }
