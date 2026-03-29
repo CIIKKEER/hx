@@ -6,6 +6,7 @@ use function hx\gf_hx;
 
 class c_debug extends c_base_class
 {
+
 	public function print_r (...$v): c_debug
 	{
 		foreach ($v as $vv)
@@ -14,11 +15,13 @@ class c_debug extends c_base_class
 		}
 		return $this->echo_with_nl();
 	}
+
 	public function var_dump　 (...$v): c_debug
 	{
 		var_dump(...$v);
 		return $this->echo_with_nl();
 	}
+
 	public function print_r_to_string (...$v): string
 	{
 		$data = gf_hx()->fun->stdclass->new();
@@ -34,11 +37,13 @@ class c_debug extends c_base_class
 
 		return $data->s;
 	}
+
 	public function echo_with_nl (): c_debug
 	{
 		echo "\n";
 		return $this;
 	}
+
 	private function ob (callable $on_ob_echo , callable $on_ob_end , callable $on_ob_start = null)
 	{
 		ob_start();
@@ -50,16 +55,17 @@ class c_debug extends c_base_class
 		ob_clean();
 		return $this;
 	}
-	
-	public function __get($k)
+
+	public function __get ($k)
 	{
-		if($k==='die')
+		if ($k === 'die')
 		{
-			die;
+			die();
 		}
 	}
-	public function die ($v='')
+
+	public function die ($v = '')
 	{
-		return die($v);
+		return $this->print_r($v)->die;
 	}
 }

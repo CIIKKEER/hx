@@ -3,6 +3,8 @@
 		"psr-4" : {
 			"hx\\" : "src/hx"
 		}
+        ,
+        "files":["src/hx/gf.php"]
 	},
 	"authors" : [{
 			"name" : "ciikkeer",

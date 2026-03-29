@@ -1,22 +1,35 @@
 <?php
 namespace hx\config;
 
-use hx\c_base_class;
+use function hx\gf_hx;
+use hx\fun\stdclass\c_stdclass;
 
 class c_config
 {
+
 	public function get (): c_stdclass
 	{
-		return [ 
+		return gf()->fun->stdclass->new_with_array([ 
 			'mysql' => [ 
 				'default' => [ 
-					'ip' => 'sony.vaio.x.x',
-					'port' => '53306',
-					'user' => 'rootx',
-					'password' => '!QAZ2wsx3edc.pl,.mysql'
+					'hostname' => 'x.x.x.x',
+					'port' => 1,
+					'username' => '',
+					'password' => ''
 				],
-				'aaa' => [ ]
+				'aaa' => [ 
+					'hostname' => 'a.b.x.x',
+					'port' => 2,
+					'username' => '',
+					'password' => ''
+				],
+				'bbb' => [ 
+					'hostname' => 'c.d.x.x',
+					'port' => 3,
+					'username' => '',
+					'password' => ''
+				]
 			]
-		];
+		]);
 	}
 }

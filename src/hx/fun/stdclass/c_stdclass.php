@@ -5,14 +5,17 @@ use hx\c_base_class;
 
 class c_stdclass extends \stdClass
 {
+
 	public function new (): c_stdclass
 	{
 		return new static();
 	}
+
 	public function new_with_array ($ar = [ ]): c_stdclass
 	{
 		return $this->new()->array_2_object($ar);
 	}
+
 	private function array_2_object (array $ar): c_stdclass
 	{
 		$obj = $this->new();
@@ -46,5 +49,17 @@ class c_stdclass extends \stdClass
 			}
 		}
 		return $obj;
+	}
+
+	public function for_each ($on_for_each): c_stdclass
+	{
+		foreach ($this as $k => $v)
+		{
+			if ($on_for_each($k,$v) === true)
+			{
+				break;
+			}
+		}
+		return $this;
 	}
 }

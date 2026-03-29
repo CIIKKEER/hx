@@ -9,6 +9,7 @@ class c_fun extends c_base_class
 {
 	public c_debug $debug;
 	public c_stdclass $stdclass;
+
 	public function __construct ()
 	{
 		$this->debug = new c_debug();

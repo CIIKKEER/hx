@@ -2,12 +2,19 @@
 namespace hx\db;
 
 use hx\db\i_db;
+use hx\db\mysqli\c_mysqli;
 
 class c_db extends \stdClass
 {
-	public i_db $db;
-	function __construct (i_db $db)
+	private i_db $m_db;
+
+	function __construct ()
 	{
-		$this->db = $db;
+	}
+
+	function new_with_mysqli (): i_db
+	{
+		$this->m_db = new c_mysqli();
+		return $this->m_db;
 	}
 }
