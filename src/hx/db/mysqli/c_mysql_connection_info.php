@@ -1,5 +1,5 @@
 <?php
-namespace hx\db;
+namespace hx\db\mysqli;
 
 use hx\c_base_class;
 
