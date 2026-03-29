@@ -20,10 +20,7 @@ class hx extends c_base_class
 		$this->config = new c_config();
 	}
 
-	public static function new (): hx
-	{
-		return new static();
-	}
+	 
 }
 
 
