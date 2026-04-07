@@ -19,6 +19,11 @@ class c_file extends c_base_class
 
 	public function get_contents ($file)
 	{
+		if ($this->file_exists($file) === FALSE)
+		{
+			return gf()->exception->throw(30000000,'file or directory specified by filename not exists');
+		}
+
 		return file_get_contents($file);
 	}
 
