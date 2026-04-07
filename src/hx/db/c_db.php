@@ -1,20 +1,25 @@
 <?php
 namespace hx\db;
 
-use hx\db\i_db;
 use hx\db\mysqli\c_mysqli;
+use hx\db\mysqli\c_mysql_connection_info;
+use hx\db\pdo\c_pdo;
+use hx\c_base_class;
 
-class c_db extends \stdClass
+/**
+ * @desc 		database factory
+ * @author 		Administrator
+ * @property 	c_mysqli	$mysqli
+ * @property 	c_pdo		$pdo
+ *
+ *
+ *
+ */
+class c_db extends c_base_class
 {
-	private i_db $m_db;
 
-	function __construct ()
+	public function __get ($k)
 	{
-	}
-
-	function new_with_mysqli (): i_db
-	{
-		$this->m_db = new c_mysqli();
-		return $this->m_db;
+		return $this->ado('mysqli',c_mysqli::class)->ado('pdo',c_pdo::class)->$k;
 	}
 }

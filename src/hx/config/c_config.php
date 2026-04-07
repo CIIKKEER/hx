@@ -3,38 +3,82 @@ namespace hx\config;
 
 use function hx\gf_hx;
 use hx\fun\stdclass\c_stdclass;
+use hx\db\mysqli\c_mysql_connection_info;
+use hx\c_base_class;
 
-class c_config
+/**
+ * @author Administrator
+ * @property c_config_mysql $mysql
+ * @property c_config_clickhouse $clickhouse
+ *
+ */
+class c_config extends c_base_class
 {
-	
-	public function get (): c_stdclass
+
+	public function __get ($k)
 	{
-// 		gf()->fun->file->ini->open_with_json(__DIR__.'/../../../env/env.json');
-// 		gf()->fun->file->ini->open_with_local_php_code_file(__DIR__.'/../../../env/env.config');
-		gf()->fun->file->ini->open(__DIR__.'/../../../env/env.ini');
-		
-		return gf()->fun->stdclass->new_with_array([ 
-			'mysql' => [ 
-				'default' => [ 
-					'hostname' => 'x.x.x.x',
-					'port' => 1,
-					'username' => '',
-					'password' => ''
-				],
-				'aaa' => [ 
-					'hostname' => 'a.b.x.x',
-					'port' => 2,
-					'username' => '',
-					'password' => ''
-				],
-				'bbb' => [ 
-					'hostname' => 'c.d.x.x',
-					'port' => 3,
-					'username' => '',
-					'password' => ''
-				]
-			]
-		]);
+		return $this->ado('mysql',c_config_mysql::class)->ado('clickhouse',c_config_clickhouse::class)->$k;
 	}
-	
+}
+
+class c_config_mysql
+{
+
+	// $ar =>	[
+	//			'mysql' => 	[
+	//							'default' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # default mysql connection string 
+	//							'aaaaaaa' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # another ...
+	//							.
+	//							.
+	//							.
+	//							.
+	//							.
+	//							.
+	//							.
+	//							.
+	//							'nnnnnnn' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # another ...
+	//						]
+	//			]
+	/**
+	 * @desc	obtain MySQL connection configuration information => you can use an array format in your code or save this configuration information to a local environment file.
+	 * @param 	array $ar
+	 * @return \hx\db\mysqli\c_mysql_connection_info
+	 * 
+	 * 
+	 * 
+	 */
+	public function get_with_array (array $ar): c_mysql_connection_info
+	{
+		return (new c_mysql_connection_info())->set_mysql_connection_info(gf()->fun->stdclass->new_with_array($ar));
+	}
+
+	public function get_with_env_json ($file): c_mysql_connection_info
+	{
+		$data = gf()->fun->stdclass->new(); /* < */gf()->fun->file->ini->open_with_json($file)->to_array()->on_empty( function()
+		{
+			return gf()->exception->throw('1000000','parse enviorment json configuration file failed');
+		})
+		->on_ok ( function ($ar) use($data)		
+		{
+			$data->mysql_connection_info = $ar;
+		});/* > */
+
+		return $this->get_with_array($data->mysql_connection_info);
+	}
+}
+
+class c_config_clickhouse
+{
+
+	/* get ClickHouse database configuration information
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 */
+	public function get_with_env_json (string $file): string
+	{
+		return $file;
+	}
 }

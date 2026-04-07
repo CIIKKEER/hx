@@ -1,27 +1,90 @@
-test.demo:
+
++---------------------------------------------------------------------------------------+
+|==========================================ciikkeer/hx==================================|
++---------------------------------------------------------------------------------------+
+|																						|
+| test.demo 	: simple and joyful coding												|
+| author 		: BREEZEER																|
+| release 		: Tue, Apr 07, 2026  7:34:32 PM											|
+| version		: 1.0																	|
+|																						|
++---------------------------------------------------------------------------------------+
 
 <?php
-	require_once __DIR__ . '/vendor/autoload.php';
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+/* < */
+gf()->fun->debug->print_r
+(
+	gf()->db->mysqli->open_with_env_json(__DIR__ . '/../env/env.json')->connect()->get_db_information(),
+	1
+	,
+	2
+	,
+	3
+	,
+	gf()->config->clickhouse->get_with_env_json('click.house.configuration.by.environment.file')
+	,
+	gf()->db->mysqli->open_with_mysql_connection_info(gf()->config->mysql->get_with_env_json(__DIR__ . '/../env/env.json'))->connect('aaa')->get_db_information()
 	
-	use hx\hx;
-	use function hx\gf_hx;
+	,
 	
-	$hx = new hx();
+	gf()->fun->file->ini->open_with_ini_file(__DIR__ . '/../env/env.ini')
 	
-	print_r($hx);
+	,
+	gf()->fun->file->ini->open_with_local_php_code_file(__DIR__ . '/../env/env.config')
+);
+
+/* > */
+
+# env.ini
+#
+#
+[mysql]
+	default[hostname] 	= 'x.x.x';
+	default[port] 		= 3306
+	default[username] 	= 'rootx'
+	default[password] 	= ''
 	
-	$ar = [ 
-		11,
-		22,
-		33,
-		'ssssssssssssss' => [ 
-			44,
-			55,
-			66
-		],
-		'5555555555555555',
-		666,
-		'ffffffffffff' => 1.23
-	];
+	aaa[hostname] 		= 'xx.x.x';
+	aaa[port] 			= 3306
+	aaa[username] 		= 'rootx'
+	aaa[password] 		= ''
 	
-	gf_hx()->fun->debug->print_r(123)->print_r(gf_hx()->fun->debug->print_r_to_string($ar))->die;
+# env.config
+#
+#
+<?php
+	return	[
+				'mysql' => 	[
+								'default' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # default mysql connection string 
+								'aaaaaaa' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # another ...							
+								'nnnnnnn' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # another ...
+							]
+			];
+
+			
+# env.json 			
+#
+#
+{
+	"mysql" :
+	{
+		"default" :	
+		{
+			"hostname" 	: "x.x.x",
+			"port"		: 3306,
+			"username"	: "",
+			"password"	: "" 
+		}
+		,
+		"aaa" :	
+		{
+			"hostname" 	: "x.x.x",
+			"port"		: 3306,
+			"username"	: "",
+			"password"	: "" 
+		}
+	}
+}

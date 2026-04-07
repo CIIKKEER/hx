@@ -2,6 +2,7 @@
 namespace hx\fun\stdclass;
 
 use hx\c_base_class;
+use hx\fun\array\c_array;
 
 class c_stdclass extends \stdClass
 {
@@ -18,8 +19,7 @@ class c_stdclass extends \stdClass
 
 	private function array_2_object (array $ar): c_stdclass
 	{
-		$obj = $this->new();
-		foreach ($ar as $key => $value)
+		/* < */$obj = $this->new();foreach ($ar as $key => $value)/* > */
 		{
 			if (is_array($value))
 			{
@@ -27,8 +27,7 @@ class c_stdclass extends \stdClass
 			}
 			else
 			{
-				$var_type = gettype($value);
-				switch ($var_type)
+				/* < convert the variable to the correct data type */$var_type = gettype($value);switch ($var_type)/* > */
 				{
 					case "boolean":
 						$v = boolval($value);
@@ -51,6 +50,24 @@ class c_stdclass extends \stdClass
 		return $obj;
 	}
 
+	private function object_2_array (&$root = null): array
+	{
+		/* < root object is myself */$root = $root === null ? $this : $root;$ar = [];if (is_object($root))/* > */
+		{
+			$ar = get_object_vars($root);
+		}
+
+		foreach ($ar as $k => $v)
+		{
+			if (is_object($v))
+			{
+				$ar[$k] = $this->object_2_array($v);
+			}
+		}
+
+		return $ar;
+	}
+
 	public function for_each ($on_for_each): c_stdclass
 	{
 		foreach ($this as $k => $v)
@@ -61,5 +78,25 @@ class c_stdclass extends \stdClass
 			}
 		}
 		return $this;
+	}
+
+	public function new_with_stdclass ($stdclass): c_stdclass
+	{
+		/* < */$o = $this->new();foreach ($stdclass as $k => $v)/* > */
+		{
+			$o->{$k} = $v;
+		}
+		return $o;
+	}
+
+	public function to_array (): c_array
+	{
+		return gf()->fun->array->new_with_array($this->object_2_array());
+	}
+
+	public function __get ($k): c_stdclass
+	{
+		$this->$k = $this->new();
+		return $this->$k;
 	}
 }

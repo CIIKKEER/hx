@@ -2,20 +2,25 @@
 namespace hx\db\mysqli;
 
 use hx\fun\stdclass\c_stdclass;
+use hx\c_base_class;
 
-class c_mysql_connection_info
+/**
+ *
+ * @author Administrator
+ * @property c_mysql_connection_info $default
+ *
+ *
+ *
+ *
+ */
+class c_mysql_connection_info extends c_base_class
 {
-	private string $m_ip;
-	private int $m_port;
-	private string $m_user;
-	private string $password;
 
-	public function __construct ()
+	public function set_mysql_connection_info ($conn): c_mysql_connection_info
 	{
-		$this->m_ip = $this->get_with_default()->hostname;
-		$this->m_port = $this->get_with_default()->port;
-		$this->m_user = $this->get_with_default()->username;
-		$this->password = $this->get_with_default()->password;
+		$this->m_mysql_connection_info = $conn->mysql;
+
+		return $this;
 	}
 
 	public final function ip (): string
@@ -33,18 +38,26 @@ class c_mysql_connection_info
 		return $this->m_user;
 	}
 
-	public final function passowrd (): string
+	public final function password (): string
 	{
-		return $this->password;
+		return $this->m_password;
 	}
 
-	public final function get (): c_stdclass
+	private function get_mysql_with_key ($key = 'default')
 	{
-		return gf()->config->get()->mysql;
+		/* < */
+		$o 				= $this->new();
+		$o->m_ip 		= $this->m_mysql_connection_info->{$key}->hostname;
+		$o->m_port 		= $this->m_mysql_connection_info->{$key}->port;
+		$o->m_user 		= $this->m_mysql_connection_info->{$key}->username;
+		$o->m_password 	= $this->m_mysql_connection_info->{$key}->password;
+		/* > */
+
+		return $o;
 	}
 
-	public final function get_with_default (): c_stdclass
+	public function __get ($k)
 	{
-		return $this->get()->default;
+		return $this->get_mysql_with_key($k);
 	}
 }

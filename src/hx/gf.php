@@ -3,8 +3,7 @@ use hx\hx;
 
 function gf (): hx
 {
-	static $gf = null;
-	if ($gf === NULL)
+	static $i = 0; /* < */static $gf = null;if ($gf === NULL)/* > */
 	{
 		$gf = hx::new();
 	}
