@@ -4,6 +4,64 @@ namespace hx\fun\debug;
 use hx\c_base_class;
 use function hx\gf_hx;
 
+class c_console_color extends c_base_class
+{
+	private string $s;
+	private \WeakReference $debug;
+
+	public function __construct (\WeakReference $debug)
+	{
+		$this->s = '';
+		$this->debug = $debug;
+	}
+
+	public function red (string $s = ''): c_console_color
+	{
+		$this->s .= "\e[38;5;196m" . $s . "\e[0m";
+
+		return $this;
+	}
+
+	public function green (string $s = ''): c_console_color
+	{
+		$this->s .= "\e[38;5;41m" . $s . "\e[0m";
+		return $this;
+	}
+
+	public function blue (string $s = ''): c_console_color
+	{
+		$this->s .= "\e[38;5;27m" . $s . "\e[0m";
+		return $this;
+	}
+	public function pink (string $s = ''): c_console_color
+	{
+		$this->s .= "\e[38;5;211m" . $s . "\e[0m";
+		return $this;
+	}
+	public function yellow (string $s = ''): c_console_color
+	{
+		$this->s .= "\e[38;5;220m" . $s . "\e[0m";
+		return $this;
+	}
+
+	public function echo (): c_console_color
+	{
+		$this->debug->get()->echo_with_nl($this->s);
+		return $this;
+	}
+
+	public function get (): string
+	{
+		return $this->s;
+	}
+}
+
+/**
+ * 
+ * @author 		Administrator
+ * @property	c_console_color $cc
+ *
+ */
 class c_debug extends c_base_class
 {
 
@@ -67,10 +125,14 @@ class c_debug extends c_base_class
 
 	public function __get ($k)
 	{
-		if ($k === 'die')
+		/* < */
+		if($k==='die')
 		{
-			die();
+			die;
 		}
+		
+		return $this->ado('cc'	,new c_console_color($this->make_weak_refernce()))->$k;
+		/* > */
 	}
 
 	public function die ($v = '')

@@ -99,4 +99,9 @@ class c_stdclass extends \stdClass
 		$this->$k = $this->new();
 		return $this->$k;
 	}
+
+	public function count (): int
+	{
+		return count(get_object_vars($this));	
+	}
 }

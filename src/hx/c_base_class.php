@@ -9,7 +9,7 @@ abstract class c_base_class extends \stdclass
 		return new static();
 	}
 
-	public function new_with_weak_rerfence (): \WeakReference
+	public function make_weak_refernce (): \WeakReference
 	{
 		return \WeakReference::create($this);
 	}
@@ -26,11 +26,11 @@ abstract class c_base_class extends \stdclass
 	 *  
 	 *  
 	 */
-	public function ado (string $k , string |callable $v): c_base_class
+	public function ado (string $k , string |callable|object $v): c_base_class
 	{
-		if (isset($this->$k) === false)
+		if (property_exists($this,$k) === false)
 		{
-			$this->$k = is_callable($v) ? $v()/* callable */ : new $v()/* class name with absolute namespace */;
+			$this->$k = is_callable($v) ? $v()/* callable */ : (is_object($v) ? $v : new $v())/* class name with absolute namespace */;
 		}
 		return $this;
 	}

@@ -10,8 +10,6 @@ class c_json extends c_base_class
 	{
 		/* < */$this->m_json_string = $s;$r = json_decode($this->m_json_string,$b_associative);return new class($r) extends c_base_class/* > */
 		{
-			private c_stdclass $m_r;
-
 			public function __destruct ()
 			{
 				unset($this->m_r);
