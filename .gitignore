@@ -3,5 +3,5 @@
 .settings/
 ghp_*
 vendor/
-test/
-env/
+/test
+/env
