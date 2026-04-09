@@ -1,6 +1,13 @@
 <?php
+declare(strict_types = 1)
+	;
 namespace hx;
 
+/**
+ * 
+ * @author Administrator
+ *
+ */
 abstract class c_base_class extends \stdclass
 {
 
@@ -9,18 +16,18 @@ abstract class c_base_class extends \stdclass
 		return new static();
 	}
 
-	public function make_weak_refernce (): \WeakReference
+	public function make_weak_reference (): \WeakReference
 	{
 		return \WeakReference::create($this);
 	}
 
 	/**
-	 *
 	 * @author	BREEZZEER
 	 * @desc 	Attach the deferred object as a public property of the current object instance
+	 * 
+	 * @param 	string 						$k
+	 * @param 	string |callable|object 	$v
 	 * @return 	c_base_class
-	 * @param 	string 				$k
-	 * @param 	string |callable 	$v
 	 *  
 	 *  
 	 *  
@@ -30,9 +37,11 @@ abstract class c_base_class extends \stdclass
 	{
 		if (property_exists($this,$k) === false)
 		{
-			$this->$k = is_callable($v) ? $v()/* callable */ : (is_object($v) ? $v : new $v())/* class name with absolute namespace */;
+			$this->$k = is_callable($v) ? $v()/* callable function */ : (is_object($v)/* object */ ? $v : (class_exists($v)/* class */ ? new $v() : die("[50000000] fatal error : $v class not found\n")))/* class name with absolute namespace */;
 		}
 		return $this;
 	}
+
+	 
 }
  

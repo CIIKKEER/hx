@@ -6,16 +6,35 @@ use hx\db\mysqli\c_mysql_connection_info;
 interface i_bindx
 {
 
-
 	public function ai (int $i): i_bindx;
 
+	public function aia (array $ia): i_bindx;
+
 	public function as (string $s): i_bindx;
+
+	public function asa (array $sa): i_bindx;
+
+	/**
+	 * 
+	 * @param float $d
+	 * @return i_bindx
+	 */
+	public function ad (float $d): i_bindx;
+
+	/**
+	 * 
+	 * @param array $da
+	 * @return i_bindx
+	 */
+	public function ada (array $da): i_bindx;
 
 	public function go (): i_query;
 }
 
 interface i_query
 {
+
+	public function for_each (callable $on_for_each): i_query;
 }
 
 interface i_db

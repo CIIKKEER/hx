@@ -9,10 +9,10 @@ class c_console_color extends c_base_class
 	private string $s;
 	private \WeakReference $debug;
 
-	public function __construct (\WeakReference $debug)
+	public function __construct (\WeakReference $debug = NULL)
 	{
 		$this->s = '';
-		$this->debug = $debug;
+		$this->debug = $debug === NULL ? gf()->fun->debug->make_weak_reference() : $debug;
 	}
 
 	public function red (string $s = ''): c_console_color
@@ -33,14 +33,34 @@ class c_console_color extends c_base_class
 		$this->s .= "\e[38;5;27m" . $s . "\e[0m";
 		return $this;
 	}
+
 	public function pink (string $s = ''): c_console_color
 	{
 		$this->s .= "\e[38;5;211m" . $s . "\e[0m";
 		return $this;
 	}
+
 	public function yellow (string $s = ''): c_console_color
 	{
 		$this->s .= "\e[38;5;220m" . $s . "\e[0m";
+		return $this;
+	}
+
+	public function white (string $s = ''): c_console_color
+	{
+		$this->s .= "\e[38;5;7m" . $s . "\e[0m";
+		return $this;
+	}
+
+	public function anl (): c_console_color
+	{
+		$this->s .= "\n";
+		return $this;
+	}
+
+	public function as (string $s = ''): c_console_color
+	{
+		$this->s .= $s;
 		return $this;
 	}
 
@@ -70,10 +90,11 @@ class c_debug extends c_base_class
 		/* < */
 		foreach ($v as $kk => $vv)
 		{
-			print_r($vv);if (array_key_last($v) !== $kk && (is_object($vv) === FALSE || is_array($vv) === FALSE))
+			if ((is_object($vv) === true || is_array($vv) === true))
 			{
 				$this->echo_with_nl();
 			}
+			print_r($vv);
 		}
 		return $this->echo_with_nl();
 		/* > */
@@ -87,7 +108,7 @@ class c_debug extends c_base_class
 
 	public function print_r_to_string (...$v): string
 	{
-		$data = gf_hx()->fun->stdclass->new();
+		$data = gf()->fun->stdclass->new();
 		$data->v = $v;
 
 		/* < */
@@ -131,7 +152,7 @@ class c_debug extends c_base_class
 			die;
 		}
 		
-		return $this->ado('cc'	,new c_console_color($this->make_weak_refernce()))->$k;
+		return $this->ado('cc'	,new c_console_color($this->make_weak_reference()))->$k;
 		/* > */
 	}
 

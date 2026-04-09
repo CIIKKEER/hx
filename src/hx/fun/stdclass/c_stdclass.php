@@ -4,6 +4,7 @@ namespace hx\fun\stdclass;
 use hx\c_base_class;
 use hx\fun\array\c_array;
 
+
 class c_stdclass extends \stdClass
 {
 
@@ -102,6 +103,11 @@ class c_stdclass extends \stdClass
 
 	public function count (): int
 	{
-		return count(get_object_vars($this));	
+		return count(get_object_vars($this));
+	}
+
+	public function to_string (): string
+	{
+		return gf()->fun->debug->print_r_to_string($this);
 	}
 }

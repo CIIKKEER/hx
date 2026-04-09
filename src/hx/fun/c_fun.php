@@ -9,13 +9,15 @@ use hx\fun\file\c_file;
 use hx\fun\json\c_json;
 use hx\fun\array\c_array;
 use hx\fun\weakrefence\c_weakrefence;
+use hx\fun\debug\c_console_color;
 
 /**
- * @property c_debug 		$debug
- * @property c_stdclass 	$stdclass
- * @property c_file 		$file
- * @property c_json 		$json
- * @property c_array 		$array
+ * @property c_debug 			$debug
+ * @property c_stdclass 		$stdclass
+ * @property c_file 			$file
+ * @property c_json 			$json
+ * @property c_array 			$array
+ * @property c_console_color	$cc
  *
  *
  *
@@ -31,6 +33,7 @@ class c_fun extends c_base_class
 					->ado('file'		, c_file::class) 
 					->ado('json'		, c_json::class)
 					->ado('array'		, c_array::class)
+					->ado('cc'			, c_console_color::class)
 					->$k;
 		/* > */
 	}
