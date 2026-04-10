@@ -14,7 +14,7 @@ class c_file extends c_base_class
 
 	public function __get ($k)
 	{
-		return $this->ado('ini',c_ini::class)->$k;
+		return $this->ado('ini',c_ini::class,$k)->$k;
 	}
 
 	public function get_contents ($file)

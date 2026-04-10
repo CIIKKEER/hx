@@ -20,6 +20,6 @@ class c_db extends c_base_class
 
 	public function __get ($k)
 	{
-		return $this->ado('mysqli',c_mysqli::class)->ado('pdo',c_pdo::class)->$k;
+		return $this->ado('mysqli',c_mysqli::class,$k)->ado('pdo',c_pdo::class,$k)->$k;
 	}
 }

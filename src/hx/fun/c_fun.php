@@ -28,12 +28,12 @@ class c_fun extends c_base_class
 	public function __get ($k)
 	{
 		/* < */
-		return $this->ado('debug'		, c_debug::class)
-					->ado('stdclass'	, c_stdclass::class)
-					->ado('file'		, c_file::class) 
-					->ado('json'		, c_json::class)
-					->ado('array'		, c_array::class)
-					->ado('cc'			, c_console_color::class)
+		return $this->ado('debug'		, c_debug::class			, $k)
+					->ado('stdclass'	, c_stdclass::class			, $k)
+					->ado('file'		, c_file::class				, $k) 
+					->ado('json'		, c_json::class				, $k)
+					->ado('array'		, c_array::class			, $k)
+					->ado('cc'			, c_console_color::class	, $k)
 					->$k;
 		/* > */
 	}

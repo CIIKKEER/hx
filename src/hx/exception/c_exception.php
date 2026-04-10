@@ -27,7 +27,9 @@ class c_exception
 
 	/**
 	 * @desc 	set custome exception process callable handler
-	 * @param 	callable $on_set_exception_handler : function (\Throwable $e)
+	 * 
+	 * @param 	callable $on_set_exception_handler
+	 * 
 	 * @return 	c_exception
 	 * 
 	 **/
@@ -35,7 +37,16 @@ class c_exception
 	{
 		if ($on_set_exception_handler === null)
 		{
-			set_exception_handler(fn ($e) => gf()->fun->debug->print_r($e)->die);
+			/* < error and exception default handler */set_exception_handler(fn ($e) => print_r($e));set_error_handler(function ($errno , $errstr , $errfile , $errline)
+			{
+				$err = new \stdClass();
+				$err->file = $errfile;
+				$err->line = $errline;
+				$err->desc = $errstr;
+				$err->erno = $errno;
+				print_r($err);
+			});
+			/* > */
 		}
 		else
 		{

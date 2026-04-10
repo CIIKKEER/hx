@@ -4,7 +4,6 @@ namespace hx\fun\stdclass;
 use hx\c_base_class;
 use hx\fun\array\c_array;
 
-
 class c_stdclass extends \stdClass
 {
 
@@ -109,5 +108,25 @@ class c_stdclass extends \stdClass
 	public function to_string (): string
 	{
 		return gf()->fun->debug->print_r_to_string($this);
+	}
+
+	public function add (string $k , $v): c_stdclass
+	{
+		$this->$k = $v;
+		return $this;
+	}
+
+	public function del (string $k): c_stdclass
+	{
+		if (property_exists($this,$k))
+		{
+			unset($this->$k);
+		}
+		return $this;
+	}
+
+	public function push ($v): c_stdclass
+	{
+		return $this->add($this->count(),$v);
 	}
 }

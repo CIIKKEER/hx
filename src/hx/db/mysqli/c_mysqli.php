@@ -9,6 +9,7 @@ use hx\db\mysqli\c_mysql_connection_info;
 use function hx\gf_hx;
 use hx\fun\stdclass\c_stdclass;
 use hx\db\i_bindx;
+use hx\db\i_transaction;
 
 /**
  *
@@ -19,16 +20,20 @@ use hx\db\i_bindx;
  */
 class c_mysqli extends c_base_class implements i_db
 {
+	public ?c_mysql_connection_info $m_mysql_connection_info = null;
 
-	public function __construct ()
-	{
-		$this->m_mysql_connection_info = new c_mysql_connection_info();
-		$this->m_mysqli = new \mysqli();
-	}
+	/**
+	 * 
+	 * @var \mysqli m_mysqli
+	 */
+	public ?\mysqli $m_mysqli = null;
 
-	public function __get ($k)
+	public function __destruct ()
 	{
-		return $this->new()->open($this->m_mysql_connection_info->$k);
+		if ($this->m_mysqli !== null)
+		{
+			$this->m_mysqli->close();
+		}
 	}
 
 	public function open_with_env_json (string $env_file_path): i_db
@@ -41,7 +46,6 @@ class c_mysqli extends c_base_class implements i_db
 		{
 			gf()->exception->throw_with_wrap(1000001,$e);
 		}
-
 		return $this;
 	}
 
@@ -50,15 +54,8 @@ class c_mysqli extends c_base_class implements i_db
 		return $this->m_mysqli->get_server_info() . ' ' . $this->m_mysqli->host_info;
 	}
 
-	public function close (): i_db
-	{
-		$this->m_mysqli->close();
-		return $this;
-	}
-
 	/**
 	 * @return c_mysqli
-	 * 
 	 * 
 	 */
 	public function open_with_mysql_connection_info (c_mysql_connection_info $conn): c_mysqli
@@ -79,18 +76,37 @@ class c_mysqli extends c_base_class implements i_db
 		{
 			gf()->fun->debug->die($e->getMessage());
 		}
-
 		return $this;
 	}
 
-	public function connect (string $connection_key = 'default'): i_db
+	public function connect (string $connection_key = 'default'): i_transaction
 	{
-		return $this->__get($connection_key);
+		return new c_transaction($this->new()->open($this->m_mysql_connection_info->$connection_key));
 	}
 
 	public function query (string $sql): i_bindx
 	{
 		return new c_bind_parameter($this->make_weak_reference(),$sql);
+	}
+}
+
+class c_transaction extends c_base_class implements i_transaction
+{
+	private c_mysqli $c_mysqli;
+
+	public function __construct (c_mysqli $c_mysqli)
+	{
+		$this->c_mysqli = $c_mysqli;
+	}
+
+	public function auto (callable $on_transaction): i_transaction
+	{
+		/* < begin transaction
+		 * 
+		 */
+		$this->c_mysqli->m_mysqli->begin_transaction();$on_transaction($this->c_mysqli) === false ? $this->c_mysqli->m_mysqli->rollback() : $this->c_mysqli->m_mysqli->commit();
+		return $this;
+		/* > */
 	}
 }
 
@@ -102,6 +118,7 @@ class c_bind_parameter extends c_base_class implements i_bindx
 	private int 			$index;
 	private c_stdclass 		$px;
 	private c_stdclass		$pb;
+	private c_stdclass 		$bind_parameter;
 	
 	/**
 	 * 
@@ -113,8 +130,7 @@ class c_bind_parameter extends c_base_class implements i_bindx
 	 * 
 	 * @var \mysqli
 	 */
-	public \mysqli 		$mysqli;
-	private c_stdclass		$bind_parameter;
+	public \mysqli 			$mysqli;
 	
 	public function __construct (\WeakReference $mysqli , string $sql)
 	{
@@ -123,10 +139,8 @@ class c_bind_parameter extends c_base_class implements i_bindx
 		$this->sqlx					= '';
 		$this->px 					= gf()->fun->stdclass->new();
 		$this->pb					= gf()->fun->stdclass->new();
-		$this->index 				= 0;
-		$this->bind_parameter_type 	= '';
-		$this->bind_paramerer_value	= [];
 		$this->bind_parameter		= gf()->fun->stdclass->new();
+		$this->index 				= 0;
 	}
 	/* > */
 	public function ai (int $i): i_bindx
@@ -258,7 +272,10 @@ class c_bind_parameter extends c_base_class implements i_bindx
 				}
 			});
 		
-			$ok = $this->stmt->bind_param($this->bind_parameter->type, ...$this->bind_parameter->value);
+			if(count($this->bind_parameter->value) > 0)
+			{
+				$ok = $this->stmt->bind_param($this->bind_parameter->type, ...$this->bind_parameter->value);
+			}
 		}
 		catch (\ArgumentCountError $e)
 		{
@@ -295,7 +312,8 @@ class c_bind_parameter extends c_base_class implements i_bindx
 
 class c_query extends c_base_class implements i_query
 {
-	private c_bind_parameter $pb;
+	private c_bind_parameter $bp;
+	private c_stdclass $data;
 
 	/**
 	 * 
@@ -305,46 +323,51 @@ class c_query extends c_base_class implements i_query
 
 	public function __construct (\WeakReference $pb)
 	{
-		$this->pb = $pb->get();
+		$this->bp = $pb->get();
+		$this->data = gf()->fun->stdclass->new();
 		$this->execute();
+		$this->fetch_assoc();
 	}
 
 	public function __destruct ()
 	{
-		$this->mr->close();
-		$this->pb->stmt->close();
-		$this->pb->mysqli->close();
-		
-		echo ('ccccccccccccccccccccc');
+		unset($this->data);
 	}
 
 	private function execute (): c_query
 	{
-		$this->pb->stmt->execute();
-		$this->mr = $this->pb->stmt->get_result();
-
+		$this->bp->stmt->execute();
+		$this->mr = $this->bp->stmt->get_result();
 		return $this;
 	}
 
-	public function for_each (callable $on_for_each): i_query
+	private function fetch_assoc (): c_query
 	{
-		for (;;)
+		/* < get data */$i = 0;for (;;)
 		{
-			/* < get data */
 			$row = $this->mr->fetch_assoc();if (is_array($row) === FALSE)
 			{
 				break;
 			}
-			
-			$exit=false;foreach($row as $k=>$v)
-			{
-				$exit = $on_for_each($k,$v);if($exit)
-				{
-					break 2;/* exit looper */
-				}
-			}
-			/* > */
+			$this->data->add($i++, gf()->fun->stdclass->new_with_array($row));
 		}
+		/* > */
+		$this->mr->close();
+		$this->bp->stmt->close();
+		return $this;
+	}
+
+	/**
+	 *
+	 * @param callable(string $k, c_stdclass $v): bool $on_for_each
+	 *
+	 * @return i_query
+	 * 
+	 * 
+	 */
+	public function for_each (callable $on_for_each): i_query
+	{
+		$this->data->for_each($on_for_each);
 		return $this;
 	}
 }

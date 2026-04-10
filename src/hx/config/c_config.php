@@ -17,7 +17,7 @@ class c_config extends c_base_class
 
 	public function __get ($k)
 	{
-		return $this->ado('mysql',c_config_mysql::class)->ado('clickhouse',c_config_clickhouse::class)->$k;
+		return $this->ado('mysql',c_config_mysql::class,$k)->ado('clickhouse',c_config_clickhouse::class,$k)->$k;
 	}
 }
 

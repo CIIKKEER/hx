@@ -28,12 +28,12 @@ class hx extends c_base_class
 	public function __get ($k)
 	{
 		/* < */
-		return $this->ado('fun'			, c_fun::class)
-					->ado('db'			, c_db::class)
-					->ado('config'		, c_config::class)
-					->ado('version'		, c_version::class)
-					->ado('test'		, c_test::class)
-					->ado('exception'	, function (){return (new c_exception())->set_exception_handler();})
+		return $this->ado('fun'			, c_fun::class														, $k)
+					->ado('db'			, c_db::class														, $k)
+					->ado('config'		, c_config::class													, $k)
+					->ado('version'		, c_version::class													, $k)
+					->ado('test'		, c_test::class														, $k)
+					->ado('exception'	, function (){return (new c_exception())->set_exception_handler();}	, $k)
 					->$k;
 		/* > */
 	}
@@ -45,7 +45,7 @@ class c_version extends c_base_class
 	const author = 'BREEZZEER';
 	const email = 'lch1025@qq.com';
 	const license = 'Apache License';
-	const description ='ciikkeer/hx => php helper library';
+	const description = 'ciikkeer/hx => php helper library';
 }
 
 
