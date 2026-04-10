@@ -115,6 +115,7 @@ class c_bind_parameter extends c_base_class implements i_bindx
 	/* < */
 	private string 			$sql;
 	private string 			$sqlx;
+	private string 			$sql_raw; 
 	private int 			$index;
 	private c_stdclass 		$px;
 	private c_stdclass		$pb;
@@ -135,6 +136,7 @@ class c_bind_parameter extends c_base_class implements i_bindx
 	public function __construct (\WeakReference $mysqli , string $sql)
 	{
 		$this->mysqli 				= $mysqli->get()->m_mysqli;
+		$this->sql_raw				= $sql;
 		$this->sql 					= $sql;
 		$this->sqlx					= '';
 		$this->px 					= gf()->fun->stdclass->new();
@@ -186,10 +188,10 @@ class c_bind_parameter extends c_base_class implements i_bindx
 
 	private function get_sql_debug (): string
 	{
-		return /* < */gf()->fun->debug->cc->blue('DEBUG.')->green('RAW.')->red("SQL :")
-																						->anl()->as('		')->as( $this->sql)
-																						->anl()->as('		')->as( $this->sqlx)
-																						->get()
+		return /* < */gf()->fun->debug->cc->yellow('DEBUG.')->red("SQL : ")->cyan('RAW : '	)->anl()->as( $this->sql_raw)
+										  ->anl()->yellow('DEBUG.')->red("SQL : ")->pink('TRI : '	)->anl()->as( $this->sql)
+										  ->anl()->yellow('DEBUG.')->red("SQL : ")->green('EXT : '	)->anl()->as( $this->sqlx)
+										  ->get()
 																						;/* > */
 	}
 
@@ -291,7 +293,11 @@ class c_bind_parameter extends c_base_class implements i_bindx
 
 	private function trim_sql_comment_as_empty (): c_bind_parameter
 	{
-		$this->sql = preg_replace('/\/\*.*?\*\//','',$this->sql);
+		# $this->sql = preg_replace('/\/\*.*?\*\//','',$this->sql);
+		#
+		#
+		$this->sql = preg_replace('/\/\*.*?\*\/|--.*?(?:\n|$)|#.*?(?:\n|$)/s','',$this->sql);
+
 		return $this;
 	}
 
@@ -307,6 +313,11 @@ class c_bind_parameter extends c_base_class implements i_bindx
 		}
 
 		return new c_query($this->make_weak_reference());
+	}
+
+	public function for_each (callable $on_for_each): i_query
+	{
+		return $this->go()->for_each($on_for_each);
 	}
 }
 
@@ -326,7 +337,6 @@ class c_query extends c_base_class implements i_query
 		$this->bp = $pb->get();
 		$this->data = gf()->fun->stdclass->new();
 		$this->execute();
-		$this->fetch_assoc();
 	}
 
 	public function __destruct ()
@@ -336,8 +346,16 @@ class c_query extends c_base_class implements i_query
 
 	private function execute (): c_query
 	{
-		$this->bp->stmt->execute();
-		$this->mr = $this->bp->stmt->get_result();
+		/* < execute SQL operations including but not limited to, SELECT, UPDATE, and DELETE
+		 * 
+		 *
+		 */ 
+		$this->bp->stmt->execute();$mr = $this->bp->stmt->get_result();if ($mr !== false)
+		{
+			$this->mr = $mr;
+			$this->fetch_assoc();
+		}
+		/* > */
 		return $this;
 	}
 

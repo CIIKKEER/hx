@@ -61,21 +61,17 @@ class c_test extends c_base_class
 									$v->add('xxxxxxxxxxx',[ 12222,333,44]);
 									$v->del('bbb');
 							}
-							$this->get_dc()->on_test_db->push($v);
+							$this->dc()->on_test_db->push($v);
 							
 							
 							return FALSE;
 						})
 						->for_each(function ($k , $v)
 						{
-							$this->get_dc()->on_test_db->push($k,'=>',$v);
+							$this->dc()->on_test_db->push($v);
 						});
 			}
 		);
-		$this->get_dc()->on_test_db->for_each(function($k,$v)
-		{
-			gf()->fun->cc->green($k)->as(' => ')->pink(is_a($v ,c_stdclass::class)?$v->to_string():$v)->echo();
-		});
 		
 
 		/* test db transcation
@@ -83,17 +79,50 @@ class c_test extends c_base_class
 		 */
 		gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json')->connect()->auto(function (i_db $db)
 		{
+			$db->query("insert into bbb.bbb(user_id,user_address)values(?,?);")->ai(gf()->fun->cipher->rand->create())->as(gf()->fun->cipher->rand->uuid())->go();
+			
 			$db->query("select now()")->go()->for_each(function($k,$v)
 			{
-				gf()->fun->debug->print_r($v);	
+				$this->dc()->on_test_db->push($v);
 			});
 			
 			$db->query("select version() , ? as '100' ")->ai(100)->go()->for_each(function($k,$v)
 			{
-				gf()->fun->debug->print_r($v);
+				$this->dc()->on_test_db->push($v);
+			});
+			
+			$db->query("select * from bbb.bbb order by id desc limit 3;")->for_each(function($k,$v)
+			{
+				$this->dc()->on_test_db->push($v);
+			});
+			
+			$db->query
+			(
+				"select
+							1 as aaa
+							,
+							? as ccc
+
+							/*
+						 	2 as bbb
+							
+							*/
+ 				# where 1=0
+				"
+			)
+			->as(gf()->fun->cipher->rand->uuid())
+			->for_each (function($k,$v)
+			{
+				$this->dc()->on_test_db->push($v);
 			});
 			
 		});
+
+		$this->dc()->on_test_db->for_each(function($k,$v)
+		{
+			gf()->fun->cc->green($k)->as(' => ')->as(is_a($v ,c_stdclass::class)?$v->to_string():$v)->echo();
+		});
+		
 		/* > */
 
 		gf()->fun->debug->print_r(gf()->fun->debug->cc->red('rrrrrrrrrrrrrrrrrrrrr')

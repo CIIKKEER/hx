@@ -59,7 +59,7 @@ abstract class c_base_class extends \stdClass
 	 * @desc	data contianer
 	 * @return 	\hx\fun\stdclass\c_stdclass
 	 */
-	public function get_dc (): c_stdclass
+	public function dc (): c_stdclass
 	{
 		/* < return data contianer
 		 * 

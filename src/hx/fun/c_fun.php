@@ -10,6 +10,7 @@ use hx\fun\json\c_json;
 use hx\fun\array\c_array;
 use hx\fun\weakrefence\c_weakrefence;
 use hx\fun\debug\c_console_color;
+use hx\fun\cipher\c_cipher;
 
 /**
  * @property c_debug 			$debug
@@ -18,6 +19,7 @@ use hx\fun\debug\c_console_color;
  * @property c_json 			$json
  * @property c_array 			$array
  * @property c_console_color	$cc
+ * @property c_cipher			cipher
  *
  *
  *
@@ -34,6 +36,7 @@ class c_fun extends c_base_class
 					->ado('json'		, c_json::class				, $k)
 					->ado('array'		, c_array::class			, $k)
 					->ado('cc'			, c_console_color::class	, $k)
+					->ado('cipher'		, c_cipher::class			, $k)
 					->$k;
 		/* > */
 	}

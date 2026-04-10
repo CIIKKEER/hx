@@ -4,7 +4,7 @@ namespace hx\db;
 use hx\db\mysqli\c_mysql_connection_info;
 use hx\fun\stdclass\c_stdclass;
 
-interface i_bindx
+interface i_bindx extends i_query
 {
 
 	public function ai (int $i): i_bindx;
