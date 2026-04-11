@@ -67,5 +67,32 @@ abstract class c_base_class extends \stdClass
 		return $this->dc === null ? (function () {$this->dc = gf()->fun->stdclass->new();return $this->dc;})() : $this->dc;
 		/* > */
 	}
+
+	/**
+	 * @author	BREEZZEER
+	 * @desc 	at runtime add new functionality to an object instance by dynamically injecting new properties or replacing existing ones
+	 *
+	 * @param 	string 						$k	: type
+	 * @param 	string |callable|object 	$v	: value
+	 *
+	 * @return 	c_base_class
+	 *
+	 * @throws	\Exception  When a class string is given but the class does not exist.
+	 *
+	 *
+	 *
+	 */
+	public function ado_inject (string $k , string |callable|object $v): c_base_class
+	{
+		if (property_exists($this,$k) === FALSE)
+		{
+			return $this->ado($k,$v,$k);
+		}
+		else
+		{
+			$this->$k = $this->new()->ado($k,$v,$k)->$k;
+		}
+		return $this;
+	}
 }
  

@@ -15,7 +15,7 @@ class c_cipher extends c_base_class
 	public function __get ($k)
 	{
 		/* < */
-		return $this->ado('rand'		, c_rand::class			, $k)		
+		return $this->ado('rand', c_rand::class	, $k)		
 					->$k;
 		/* > */
 	}
@@ -29,8 +29,34 @@ class c_rand extends c_base_class
 		return rand();
 	}
 
-	public function uuid (): string
+	public function uuid ()
 	{
-		return md5(uniqid('', true) . random_bytes(16));
+		return new class() extends c_base_class
+		{
+
+			public function __construct ()
+			{
+				$this->v4 = $this->v4();
+			}
+
+			public function md5 (): string
+			{
+				return md5($this->v4);
+			}
+
+			public function create (): string
+			{
+				$data = random_bytes(16);
+				$data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+				$data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+				return bin2hex($data);
+			}
+
+			public function v4 (): string
+			{
+				return vsprintf('%s%s-%s-%s-%s-%s%s%s',str_split(bin2hex($this->create()),4));
+			}
+		};
+		return md5(uniqid('',true) . random_bytes(16));
 	}
 }

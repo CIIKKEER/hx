@@ -79,7 +79,7 @@ class c_test extends c_base_class
 		 */
 		gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json')->connect()->auto(function (i_db $db)
 		{
-			$db->query("insert into bbb.bbb(user_id,user_address)values(?,?);")->ai(gf()->fun->cipher->rand->create())->as(gf()->fun->cipher->rand->uuid())->go();
+			$db->query("insert into bbb.bbb(user_id,user_address)values(?,?);")->ai(gf()->fun->cipher->rand->create())->as(gf()->fun->cipher->rand->uuid()->v4())->go();
 			
 			$db->query("select now()")->go()->for_each(function($k,$v)
 			{
@@ -96,6 +96,9 @@ class c_test extends c_base_class
 				$this->dc()->on_test_db->push($v);
 			});
 			
+			
+			 
+			
 			$db->query
 			(
 				"select
@@ -110,7 +113,7 @@ class c_test extends c_base_class
  				# where 1=0
 				"
 			)
-			->as(gf()->fun->cipher->rand->uuid())
+			->as(gf()->fun->cipher->rand->uuid()->create() )
 			->for_each (function($k,$v)
 			{
 				$this->dc()->on_test_db->push($v);
