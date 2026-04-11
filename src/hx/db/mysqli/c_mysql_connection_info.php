@@ -13,32 +13,32 @@ use hx\c_base_class;
  *
  *
  */
-class c_mysql_connection_info extends c_base_class
+class c_mysql_connection_info extends c_base_class implements i_mysql_connection_info
 {
 
-	public function set_mysql_connection_info ($conn): c_mysql_connection_info
+	public function set_mysql_connection_info ($conn): i_mysql_connection_info
 	{
 		$this->m_mysql_connection_info = $conn->mysql;
 
 		return $this;
 	}
 
-	public final function ip (): string
+	public function ip (): string
 	{
 		return $this->m_ip;
 	}
 
-	public final function port (): int
+	public function port (): int
 	{
 		return $this->m_port;
 	}
 
-	public final function user (): string
+	public function user (): string
 	{
 		return $this->m_user;
 	}
 
-	public final function password (): string
+	public function password (): string
 	{
 		return $this->m_password;
 	}
@@ -60,4 +60,18 @@ class c_mysql_connection_info extends c_base_class
 	{
 		return $this->get_mysql_with_key($k);
 	}
+}
+
+interface i_mysql_connection_info
+{
+
+	public function set_mysql_connection_info ($conn): i_mysql_connection_info;
+
+	public function ip (): string;
+
+	public function port (): int;
+
+	public function user (): string;
+
+	public function password (): string;
 }

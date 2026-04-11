@@ -4,6 +4,7 @@ namespace hx\test;
 use hx\c_base_class;
 use hx\fun\stdclass\c_stdclass;
 use hx\db\i_db;
+use hx\db\i_trans;
 
 class c_test extends c_base_class
 {
@@ -43,12 +44,23 @@ class c_test extends c_base_class
 
 	private function on_test_db (): c_test
 	{
-		/* < */
-		gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json')->connect()->auto
+
+		/** <
+		 *  
+		 * @var i_db $db
+		 * 
+		 */
+		$db = gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json');
+		
+		
+	
+		
+		
+		$db->connect()->auto
 		(
-			function (i_db $db) 
+			function (i_trans $i) 
 			{
-				$db->query("select version(),? as '100',? as '200',? as aaa,? as bbb,? as '1.234'  where 1 in (?) and 'ccc' in(?) union all select version(),? as '100',? as '200',? as aaa,? as bbb,? as '1.234'  where 1 in (?) and 'ccc' in(?)  ;")
+				$i->query("select version(),? as '100',? as '200',? as aaa,? as bbb,? as '1.234'  where 1 in (?) and 'ccc' in(?) union all select version(),? as '100',? as '200',? as aaa,? as bbb,? as '1.234'  where 1 in (?) and 'ccc' in(?)  ;")
 					->ai(100)->ai(200)->as('aaa')->as('bbb')->ad(1.234)->aia([ 0,1,2,3])->asa([ 'ccc','ddd'])				
 					->ai(200)->ai(300)->as('eee')->as('fff')->ad(1.234)->aia([ 0,1,2,3])->asa([ 'ccc','ggg'])
 					->go()
@@ -73,13 +85,43 @@ class c_test extends c_base_class
 			}
 		);
 		
-
+		
+		/* test db no transcation
+		 *
+		 */
+		$db->connect()->query("select version(),now();")->go()->for_each(function($k,$v)
+		{
+			$this->dc()->on_test_db->push($v);
+		});
+		
+		/* test database transactions manually
+		 * 
+		 */
+		$i = $db->connect('aaa')->begin();
+		$i->query("insert into bbb.bbb(user_id,user_address)values(?,?);")->ai(888)->as(gf()->fun->cipher->rand->uuid()->v4())->go();
+		$i->rollback();
+		
+		/* 
+		 * 
+		 */
+		$db->connect()->query("select * from bbb.bbb order by id desc;")->go()->get_single_row()->for_each(function($k,$v)
+		{
+			$this->dc()->get_single_row->push($v);
+		});
+		gf()->fun->debug->print_r("get_single_value => ",$db->connect()->query("select * from bbb.bbb order by id desc;")->go()->get_single_value());
+		
+		
 		/* test db transcation
 		 * 
 		 */
-		gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json')->connect()->auto(function (i_db $db)
+		$db->connect()->auto(function (i_trans $db)
 		{
+		 
+				
+		 
 			$db->query("insert into bbb.bbb(user_id,user_address)values(?,?);")->ai(gf()->fun->cipher->rand->create())->as(gf()->fun->cipher->rand->uuid()->v4())->go();
+				
+			 
 			
 			$db->query("select now()")->go()->for_each(function($k,$v)
 			{
@@ -95,9 +137,7 @@ class c_test extends c_base_class
 			{
 				$this->dc()->on_test_db->push($v);
 			});
-			
-			
-			 
+					 
 			
 			$db->query
 			(
@@ -113,22 +153,26 @@ class c_test extends c_base_class
  				# where 1=0
 				"
 			)
-			->as(gf()->fun->cipher->rand->uuid()->create() )
-			->for_each (function($k,$v)
+			->as(gf()->fun->cipher->rand->uuid()->create())->go()->for_each (function($k,$v)
 			{
 				$this->dc()->on_test_db->push($v);
 			});
 			
+			
+			$db->query("select *,'?\"?\"`????\\\\\\\\\\\\//////////`'  as xxxxxxxx from bbb.bbb order by id desc limit 3;")->for_each(function($k,$v)
+			{
+				$this->dc()->on_test_db->push($v);
+			});
+			
+			
 		});
-
-		$this->dc()->on_test_db->for_each(function($k,$v)
-		{
-			gf()->fun->cc->green($k)->as(' => ')->as(is_a($v ,c_stdclass::class)?$v->to_string():$v)->echo();
-		});
+		
+ 
+		gf()->fun->debug->print_r($this->dc());
 		
 		/* > */
 
-		gf()->fun->debug->print_r(gf()->fun->debug->cc->red('rrrrrrrrrrrrrrrrrrrrr')
+		gf()->fun->debug->print_r(gf()->fun->debug->cc->red('ddddddddddddddddddddddddddddddddddddddddddddddddddddddd')
 			->green('gggggggggggggggggg')
 			->blue('bbbbbbbbbbbbbbbbbb')
 			->pink('pppppppppppppp')

@@ -42,7 +42,12 @@ class c_array extends c_base_class
 		return $this;
 	}
 
-	public function new_with_array ($ar): c_array
+	/**
+	 * 
+	 * @param array $ar
+	 * @return c_array
+	 */
+	public function new_with_array (array $ar): c_array
 	{
 		$o = $this->new();
 		$o->m_ar = $ar;
@@ -53,5 +58,11 @@ class c_array extends c_base_class
 	{
 		$this->empty() === FALSE ? $on_ok($this->m_ar) : null;
 		return $this;
+	}
+
+	public function shift ()
+	{
+		$ar = array_shift($this->m_ar);
+		return $ar;
 	}
 }

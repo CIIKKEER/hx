@@ -68,6 +68,13 @@ class c_stdclass extends \stdClass
 		return $ar;
 	}
 
+	/**
+	 * 
+	 * @param callable (function (string $k,$v) : bool $on_for_each
+	 * @return c_stdclass
+	 * 
+	 * 
+	 */
 	public function for_each ($on_for_each): c_stdclass
 	{
 		foreach ($this as $k => $v)

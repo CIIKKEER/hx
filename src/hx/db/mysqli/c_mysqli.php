@@ -9,13 +9,13 @@ use hx\db\mysqli\c_mysql_connection_info;
 use function hx\gf_hx;
 use hx\fun\stdclass\c_stdclass;
 use hx\db\i_bindx;
-use hx\db\i_transaction;
+use hx\db\i_trans;
+use hx\fun\array\c_array;
 
 /**
  *
  * @desc	read mysql database data by mysql native driver mode
  * @author 	Administrator
- * 
  * 
  */
 class c_mysqli extends c_base_class implements i_db
@@ -42,7 +42,7 @@ class c_mysqli extends c_base_class implements i_db
 		{
 			$this->m_mysql_connection_info = gf()->config->mysql->get_with_env_json($env_file_path);
 		}
-		catch (\Exception $e)
+		catch (\Throwable $e)
 		{
 			gf()->exception->throw_with_wrap(1000001,$e);
 		}
@@ -58,7 +58,7 @@ class c_mysqli extends c_base_class implements i_db
 	 * @return c_mysqli
 	 * 
 	 */
-	public function open_with_mysql_connection_info (c_mysql_connection_info $conn): c_mysqli
+	public function open_with_mysql_connection_info (i_mysql_connection_info $conn): c_mysqli
 	{
 		$this->m_mysql_connection_info = $conn;
 		return $this;
@@ -79,34 +79,63 @@ class c_mysqli extends c_base_class implements i_db
 		return $this;
 	}
 
-	public function connect (string $connection_key = 'default'): i_transaction
+	/* < create database transaction 
+	 * 
+	 */
+	public function connect (string $connection_key = 'default'): i_trans
 	{
-		return new c_transaction($this->new()->open($this->m_mysql_connection_info->$connection_key));
+		$db = $this->new()->open($this->m_mysql_connection_info->$connection_key);return new c_trans($db->make_weak_reference());
 	}
-
-	public function query (string $sql): i_bindx
-	{
-		return new c_bind_parameter($this->make_weak_reference(),$sql);
-	}
+	/* > */
 }
 
-class c_transaction extends c_base_class implements i_transaction
+class c_trans extends c_base_class implements i_trans
 {
 	private c_mysqli $c_mysqli;
 
-	public function __construct (c_mysqli $c_mysqli)
+	public function __construct (\WeakReference $c_mysqli)
 	{
-		$this->c_mysqli = $c_mysqli;
+		$this->c_mysqli = $c_mysqli->get();
 	}
 
-	public function auto (callable $on_transaction): i_transaction
+	/* < begin transaction
+	 * 
+	 */
+	public function auto (callable $on_transaction): i_trans
 	{
-		/* < begin transaction
-		 * 
-		 */
-		$this->c_mysqli->m_mysqli->begin_transaction();$on_transaction($this->c_mysqli) === false ? $this->c_mysqli->m_mysqli->rollback() : $this->c_mysqli->m_mysqli->commit();
+		try 
+		{
+			$this->begin();$ok = $on_transaction($this);
+		}
+		catch (\Throwable  $e)
+		{
+			$ok = TRUE;
+		}
+		$ok === true ? $this->rollback() : $this->commit();
 		return $this;
-		/* > */
+	}
+	/* > */
+	public function query (string $sql): i_bindx
+	{
+		return new c_bind_parameter($this->c_mysqli->make_weak_reference(),$sql);
+	}
+
+	public function begin (): i_trans
+	{
+		$this->c_mysqli->m_mysqli->begin_transaction();
+		return $this;
+	}
+
+	public function commit (): i_trans
+	{
+		$this->c_mysqli->m_mysqli->commit();
+		return $this;
+	}
+
+	public function rollback (): i_trans
+	{
+		$this->c_mysqli->m_mysqli->rollback();
+		return $this;
 	}
 }
 
@@ -120,7 +149,7 @@ class c_bind_parameter extends c_base_class implements i_bindx
 	private c_stdclass 		$px;
 	private c_stdclass		$pb;
 	private c_stdclass 		$bind_parameter;
-	
+	private c_mysqli		$c_mysqli;
 	/**
 	 * 
 	 * @var \mysqli_stmt
@@ -133,9 +162,11 @@ class c_bind_parameter extends c_base_class implements i_bindx
 	 */
 	public \mysqli 			$mysqli;
 	
-	public function __construct (\WeakReference $mysqli , string $sql)
+	
+	public function __construct (\WeakReference $c_mysqli , string $sql)
 	{
-		$this->mysqli 				= $mysqli->get()->m_mysqli;
+		$this->c_mysqli				= $c_mysqli->get();
+		$this->mysqli 				= $this->c_mysqli->m_mysqli;
 		$this->sql_raw				= $sql;
 		$this->sql 					= $sql;
 		$this->sqlx					= '';
@@ -145,6 +176,20 @@ class c_bind_parameter extends c_base_class implements i_bindx
 		$this->index 				= 0;
 	}
 	/* > */
+	public function go (): i_query
+	{
+		try
+		{
+			/* < prepare to bind parameter */$this->trim_sql_comment_as_empty()->create_parameter_place_holder();$this->stmt = $this->mysqli->prepare($this->sqlx);$this->create_parameter_binding();/* > */
+		}
+		catch (\Exception $e)
+		{
+			$this->on_error($e->getMessage());
+		}
+
+		return new c_query($this->make_weak_reference());
+	}
+
 	public function ai (int $i): i_bindx
 	{
 		$this->px->{$this->index++} = $i;
@@ -188,11 +233,12 @@ class c_bind_parameter extends c_base_class implements i_bindx
 
 	private function get_sql_debug (): string
 	{
-		return /* < */gf()->fun->debug->cc->yellow('DEBUG.')->red("SQL : ")->cyan('RAW : '	)->anl()->as( $this->sql_raw)
-										  ->anl()->yellow('DEBUG.')->red("SQL : ")->pink('TRI : '	)->anl()->as( $this->sql)
-										  ->anl()->yellow('DEBUG.')->red("SQL : ")->green('EXT : '	)->anl()->as( $this->sqlx)
-										  ->get()
-																						;/* > */
+		/* < */
+		return gf()->fun->debug->cc->yellow('DEBUG.')->red("SQL   : ")->cyan('RAW \ '	)->anl()->as('                   ')->as( $this->sql_raw)
+										  ->anl()->yellow('DEBUG.')->red("SQL   : ")->pink('TRI \ '	)->anl()->as('                   ')->as( $this->sql)
+										  ->anl()->yellow('DEBUG.')->red("SQL   : ")->green('EXT \ '	)->anl()->as('                   ')->as( $this->sqlx)
+										  ->get();
+		/* > */
 	}
 
 	private function create_parameter_place_holder (): c_bind_parameter
@@ -237,13 +283,16 @@ class c_bind_parameter extends c_base_class implements i_bindx
 			$this->pb->$k = $pb;
 		});
 
-		/* < map bind parameter to placeholder */$ar_sql = explode('?',$this->sql);$ar_count = count($ar_sql);foreach ($ar_sql as $k => $v)
+		/* < map bind parameter to placeholder */$ar_sql = $this->convert_place_holder_2_array($this->sql);$ar_count = count($ar_sql);foreach ($ar_sql as $k => $v)
 		{
-			if($this->px->to_array()->count()!== $ar_count-1)
+			if ($this->px->to_array()->count() !== $ar_count - 1)
 			{
-				$this->on_error(gf()->fun->cc->new()->yellow('The number of MySQL bound parameter variables does not match the target placeholders')->get());
+				$this->on_error(gf()->fun->cc->new()
+					->blue('SQL.PREPARE : ')
+					->as('The number of MySQL bound parameter variables does not match the target placeholders')
+					->get());
 			}
-			
+
 			if ($k !== ($ar_count - 1))
 			{
 				$this->sqlx .= $v . rtrim(str_repeat('?,',strlen(key($this->pb->$k))),',');
@@ -255,6 +304,34 @@ class c_bind_parameter extends c_base_class implements i_bindx
 		}
 		/* > */
 		return $this;
+	}
+
+	private function convert_place_holder_2_array (string $str , string $delimiter = '?'): array
+	{
+		/* < eliminate the effect of the original ? character
+		 * 
+		 */
+		$placeholder = "\x00";$protected = [ ];$str = preg_replace_callback
+		(
+			'/\\\\.|"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"|\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\'|`[^`\\\\]*(?:\\\\.[^`\\\\]*)*`/'
+			,
+			function ($m) use ( &$protected , $placeholder)
+			{
+				$key 			 = $placeholder . count($protected);
+				$protected[$key] = $m[0];
+
+				return $key;
+			}
+			,
+			$str
+		);
+
+		$parts = explode($delimiter,$str);foreach ($parts as &$part)
+		{
+			$part = str_replace(array_keys($protected),array_values($protected),$part);
+		}
+
+		return $parts;
 	}
 
 	private function create_parameter_binding (): c_bind_parameter
@@ -299,20 +376,6 @@ class c_bind_parameter extends c_base_class implements i_bindx
 		$this->sql = preg_replace('/\/\*.*?\*\/|--.*?(?:\n|$)|#.*?(?:\n|$)/s','',$this->sql);
 
 		return $this;
-	}
-
-	public function go (): i_query
-	{
-		try
-		{
-			/* < prepare to bind parameter */$this->trim_sql_comment_as_empty()->create_parameter_place_holder();$this->stmt = $this->mysqli->prepare($this->sqlx);$this->create_parameter_binding();/* > */
-		}
-		catch (\Exception $e)
-		{
-			$this->on_error($e->getMessage());
-		}
-
-		return new c_query($this->make_weak_reference());
 	}
 
 	public function for_each (callable $on_for_each): i_query
@@ -376,16 +439,42 @@ class c_query extends c_base_class implements i_query
 	}
 
 	/**
-	 *
-	 * @param callable(string $k, c_stdclass $v): bool $on_for_each
-	 *
-	 * @return i_query
 	 * 
-	 * 
+	 * {@inheritDoc}
+	 * @see \hx\db\i_query::for_each()
 	 */
 	public function for_each (callable $on_for_each): i_query
 	{
 		$this->data->for_each($on_for_each);
 		return $this;
+	}
+
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \hx\db\i_query::get_single_row()
+	 */
+	public function get_single_row (): c_stdclass
+	{
+		/** <
+		 * 
+		 * @var c_stdclass $data
+		 */
+		$data = gf()->fun->stdclass->new();$this->for_each(function ($k , $v) use (&$data)
+		{
+			$data = $v;
+			return true;
+		});
+		/* > */
+		return $data;
+	}
+
+	public function get_single_value (): mixed
+	{
+		/** < 
+		 * @var c_array $ar
+		 */
+		return $this->get_single_row()->to_array()->shift();
+		/* > */
 	}
 }
