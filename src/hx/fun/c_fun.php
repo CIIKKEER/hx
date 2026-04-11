@@ -19,7 +19,7 @@ use hx\fun\cipher\c_cipher;
  * @property c_json 			$json
  * @property c_array 			$array
  * @property c_console_color	$cc
- * @property c_cipher			cipher
+ * @property c_cipher			$cipher
  *
  *
  *
