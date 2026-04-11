@@ -5,6 +5,7 @@ use function hx\gf_hx;
 use hx\fun\stdclass\c_stdclass;
 use hx\db\mysqli\c_mysql_connection_info;
 use hx\c_base_class;
+use hx\db\mysqli\i_mysql_connection_info;
 
 /**
  * @author Administrator
@@ -41,8 +42,9 @@ class c_config_mysql
 	//			]
 	/**
 	 * @desc	obtain MySQL connection configuration information => you can use an array format in your code or save this configuration information to a local environment file.
+	 * 
 	 * @param 	array $ar
-	 * @return \hx\db\mysqli\c_mysql_connection_info
+	 * @return 	c_mysql_connection_info
 	 * 
 	 * 
 	 * 

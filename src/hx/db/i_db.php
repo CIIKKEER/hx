@@ -70,7 +70,7 @@ interface i_db
 
 	public function connect (string $connection_key = 'default'): i_trans;
 
-	public function get_db_information (): string;
+	public function get_db_information (string $connection_key = 'default'): c_stdclass;
 }
 
  

@@ -49,11 +49,6 @@ class c_mysqli extends c_base_class implements i_db
 		return $this;
 	}
 
-	public function get_db_information (): string
-	{
-		return $this->m_mysqli->get_server_info() . ' ' . $this->m_mysqli->host_info;
-	}
-
 	/**
 	 * @return c_mysqli
 	 * 
@@ -64,6 +59,11 @@ class c_mysqli extends c_base_class implements i_db
 		return $this;
 	}
 
+	/**
+	 * 
+	 * @param \hx\db\mysqli\c_mysql_connection_info $conn
+	 * @return c_mysqli
+	 */
 	private function open (c_mysql_connection_info $conn): c_mysqli
 	{
 		$this->m_mysqli = new \mysqli();
@@ -86,6 +86,14 @@ class c_mysqli extends c_base_class implements i_db
 	{
 		$db = $this->new()->open($this->m_mysql_connection_info->$connection_key);return new c_trans($db->make_weak_reference());
 	}
+	public function get_db_information (string $connection_key = 'default'): c_stdclass
+	{
+		$db = $this->new()->open($this->m_mysql_connection_info->$connection_key);
+		$db->dc()->server_info = $db->m_mysqli->get_server_info();
+		$db->dc()->host_info = $db->m_mysqli->host_info;
+		return $db->dc();
+	}
+
 	/* > */
 }
 

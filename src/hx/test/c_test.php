@@ -50,13 +50,7 @@ class c_test extends c_base_class
 		 * @var i_db $db
 		 * 
 		 */
-		$db = gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json');
-		
-		
-	
-		
-		
-		$db->connect()->auto
+		$db = gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json');	$db->connect()->auto
 		(
 			function (i_trans $i) 
 			{
@@ -116,13 +110,7 @@ class c_test extends c_base_class
 		 */
 		$db->connect()->auto(function (i_trans $db)
 		{
-		 
-				
-		 
 			$db->query("insert into bbb.bbb(user_id,user_address)values(?,?);")->ai(gf()->fun->cipher->rand->create())->as(gf()->fun->cipher->rand->uuid()->v4())->go();
-				
-			 
-			
 			$db->query("select now()")->go()->for_each(function($k,$v)
 			{
 				$this->dc()->on_test_db->push($v);
@@ -170,7 +158,6 @@ class c_test extends c_base_class
  
 		gf()->fun->debug->print_r($this->dc());
 		
-		/* > */
 
 		gf()->fun->debug->print_r(gf()->fun->debug->cc->red('ddddddddddddddddddddddddddddddddddddddddddddddddddddddd')
 			->green('gggggggggggggggggg')
@@ -178,24 +165,13 @@ class c_test extends c_base_class
 			->pink('pppppppppppppp')
 			->yellow('yyyyyyyyyyy')
 			->anl()
-			->get(),gf()->version::author . '@' . gf()->version::description,
+			->get(),gf()->version::author . '@' . gf()->version::description
+		,
+			
+			
+		gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json')->get_db_information('aaa')
+			
 
-		// 	1
-		//gf()->db->mysqli->open_with_mysql_connection_info(gf()->config->mysql->get_with_env_json(__DIR__ . '/../env/env.json'))->connect('aaa')->get_db_information()
-		// 	,
-		// 	2
-		// 	,
-		// 	3
-		// 	,
-		// 	gf()->config->clickhouse->get_with_env_json('click.house.configuration.by.environment.file')
-		// 	,
-
-		// 	,
-
-		// 	gf()->fun->file->ini->open_with_ini_file(__DIR__ . '/../env/env.ini')
-
-		// 	,
-		// 	gf()->fun->file->ini->open_with_local_php_code_file(__DIR__ . '/../env/env.config')
 		);
 		/* > */
 		return $this;
