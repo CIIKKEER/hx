@@ -56,7 +56,7 @@ abstract class c_base_class extends \stdClass
 	}
 
 	/**
-	 * @desc	data contianer
+	 * @desc	data container
 	 * @return 	\hx\fun\stdclass\c_stdclass
 	 */
 	public function dc (): c_stdclass
