@@ -59,16 +59,25 @@ class c_redis extends c_base_class implements i_redis_connect
 	 */
 	public ?\Credis_Client $rc = null;
 
+	public function __destruct ()
+	{
+		$this->close();
+	}
+
+	/* <
+	 * 
+	 */
+	public function __get ($k)
+	{
+		return $this->ado('s',$this->make_type_for_redis()->s(),$k)
+					->$k;
+	}
+	/* > */
 	public function close (): i_redis_connect
 	{
 		$this->rc === null ? null : $this->rc->close(true);
 
 		return $this;
-	}
-
-	public function __destruct ()
-	{
-		$this->close();
 	}
 
 	public function open_with_json_file (string $file): self
@@ -84,16 +93,6 @@ class c_redis extends c_base_class implements i_redis_connect
 
 		return $this->make_type_for_redis();
 	}
-
-	/* <
-	 * 
-	 */
-	public function __get ($k)
-	{
-		return $this->ado('s',$this->make_type_for_redis()->s(),$k)
-					->$k;
-	}
-	/* > */
 
 	/**
 	 * 
@@ -113,17 +112,15 @@ class c_redis extends c_base_class implements i_redis_connect
 
 	/**
 	 * @param	string $k
-	 * @param 	callable (c_redis $r) : void $on_connect_ex
+	 * @param 	callable (c_redis $r,i_redis_type $rt) : void $on_connect_ex
 	 * @return 	self
 	 * 
-	 * <
 	 */
-	public function connect_ex (callable $on_connect_ex , string $k = 'default'): self
+	public function connect_ex (callable $on_connect_ex = NULL , string $k = 'default'): self
 	{
-		$this->connect($k);$on_connect_ex($this);
+		$on_connect_ex === null ? null : $on_connect_ex($this,$this->connect($k));
 		return $this;
 	}
-	/* > */
 }
 
 class c_redis_type extends c_base_class implements i_redis_type
@@ -188,7 +185,7 @@ class c_redis_list extends c_base_class implements i_redis_set_get_for_list
 				}
 				/* > */
 			}
-			else 
+			else
 			{
 				break;
 			}

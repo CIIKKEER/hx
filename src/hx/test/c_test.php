@@ -31,9 +31,10 @@ class c_test extends c_base_class
 		/* < redis test ...
 		 * 
 		 */
-		gf()->cache->redis->new()->open_with_json_file(__DIR__ . '/../../../env/env.json')->connect_ex(function(c_redis $r)
+		gf()->cache->redis->new()->open_with_json_file(__DIR__ . '/../../../env/env.json')->connect_ex ( function(c_redis $r,i_redis_type $rt)
 		{
 			$this->dc()->redis->s->push($r->s->get('aaa'));
+			$this->dc()->redis->s->push($rt->s()->get('aaa'));
 		});
 		
 		
