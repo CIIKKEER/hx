@@ -28,8 +28,16 @@ interface i_redis_set_get_for_list
 
 	public function pop (): mixed;
 
+	public function popb (int $timeout): mixed;
+
 	public function count (): int;
 
+	/**
+	 *
+	 * @param callable (int $count,$v,bool timeout) : bool $on_for_each
+	 * @return self
+	 * 
+	 */
 	public function for_each (callable $on_for_each): self;
 }
 
@@ -177,21 +185,19 @@ class c_redis_list extends c_base_class implements i_redis_set_get_for_list
 			/* < pop all data in the current list
 			 * 
 			 */
-			$k = $this->count();if ($k > 0)
-			{
-				$ok = $on_for_each($k,$this->pop());if ($ok === TRUE)
-				{
-					break;
-				}
-				/* > */
-			}
-			else
+			$v = $this->popb() ; $timeout = $v === false ? true : false;$ok = $on_for_each($this->count()/* list count */,$timeout===true ? '' : $v[1]/* value */,$timeout/* true : timeout */);if ($ok === TRUE)
 			{
 				break;
 			}
+			/* > */
 		}
 
 		return $this;
+	}
+
+	public function popb (int $timeout = 1): mixed
+	{
+		return $this->c_redis_type->c_redis->rc->brPop($this->k,$timeout);
 	}
 }
 

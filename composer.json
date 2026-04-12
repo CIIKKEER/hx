@@ -19,6 +19,6 @@
 		"php fast library"
 	],
 	"require": {
-		"colinmollenhour/credis": "^1.17"
+		"colinmollenhour/credis": "1.17.1"
 	}
 }

@@ -48,9 +48,12 @@ class c_test extends c_base_class
 			$rt->s()->set('aaa', gf()->fun->cipher->rand->create())->get('aaa')
 		);
 		
-		$rt->list('list.aaa')->push(0)->push(1)->push(2)->push(3)->for_each(function($k,$v)
+		$rt->list('list.aaa')->push(0)->push(1)->push(2)->push(3)->for_each(function($k,$v,$timeout)
 		{
-			gf()->fun->debug->print_r($k,' => ',$v);
+			gf()->fun->debug->print_r($k,$v,$timeout);if($timeout)
+			{
+				return true;
+			}
 		});
 		
 		
