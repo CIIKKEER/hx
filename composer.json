@@ -19,6 +19,6 @@
 		"php fast library"
 	],
 	"require": {
-		"predis/predis": "3.4.2"
+		"colinmollenhour/credis": "^1.17"
 	}
 }

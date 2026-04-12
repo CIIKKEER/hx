@@ -27,10 +27,10 @@ interface i_query
 {
 
 	/**
-	 * @desc get all data
-	 * @param callable(string $k, c_stdclass $v): bool $on_for_each
+	 * @desc 	get all data
+	 * @param 	callable(string $k, c_stdclass $v): bool $on_for_each
 	 * 
-	 * @return i_query
+	 * @return 	i_query
 	 * 
 	 */
 	public function for_each (callable $on_for_each): i_query;

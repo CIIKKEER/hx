@@ -132,8 +132,12 @@ class c_stdclass extends \stdClass
 		return $this;
 	}
 
-	public function push ($v): c_stdclass
+	public function push (...$v): c_stdclass
 	{
-		return $this->add($this->count(),$v);
+		foreach ($v as $vv)
+		{
+			$this->add($this->count(),$vv);
+		}
+		return $this;
 	}
 }

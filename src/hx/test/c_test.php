@@ -5,6 +5,9 @@ use hx\c_base_class;
 use hx\fun\stdclass\c_stdclass;
 use hx\db\i_db;
 use hx\db\i_trans;
+use hx\cache\redis\i_redis_connect;
+use hx\cache\redis\i_redis_type;
+use hx\cache\redis\c_redis;
 
 class c_test extends c_base_class
 {
@@ -15,11 +18,45 @@ class c_test extends c_base_class
 
 	public function go (): c_test
 	{
-		$this->on_test_cc()->
+		$this->on_test_cc();
 		// 			->on_test_c_stdclass_to_string()
 
-		on_test_db();
+		//on_test_db();
+		$this->on_test_redis();
+		return $this;
+	}
 
+	private function on_test_redis (): self
+	{
+		/* < redis test ...
+		 * 
+		 */
+		gf()->cache->redis->new()->open_with_json_file(__DIR__ . '/../../../env/env.json')->connect_ex(function(c_redis $r)
+		{
+			$this->dc()->redis->s->push($r->s->get('aaa'));
+		});
+		
+		
+		
+		/**
+		 * @var i_redis_type $rt
+		 */
+		$rt = gf()->cache->redis->open_with_json_file(__DIR__ . '/../../../env/env.json')->connect();
+		$this->dc()->redis->s->push
+		(
+			$rt->s()->set('aaa', gf()->fun->cipher->rand->create())->get('aaa')
+		);
+		
+		$rt->list('list.aaa')->push(0)->push(1)->push(2)->push(3)->for_each(function($k,$v)
+		{
+			gf()->fun->debug->print_r($k,' => ',$v);
+		});
+		
+		
+		
+		
+		
+		gf()->fun->debug->print_r($this->dc()->redis);
 		return $this;
 	}
 

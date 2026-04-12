@@ -8,6 +8,7 @@ use hx\c_base_class;
 use hx\config\c_config;
 use hx\exception\c_exception;
 use hx\test\c_test;
+use hx\cache\c_cache;
 
 /**
  * @author 		Administrator
@@ -17,7 +18,7 @@ use hx\test\c_test;
  * @property 	c_exception 	$exception
  * @property 	c_version		$version
  * @property	c_test			$test
- * 		
+ * @property	c_cache			$cache 		
  *
  *
  *
@@ -30,6 +31,7 @@ class hx extends c_base_class
 		/* < */
 		return $this->ado('fun'			, c_fun::class														, $k)
 					->ado('db'			, c_db::class														, $k)
+					->ado('cache'		, c_cache::class													, $k)
 					->ado('config'		, c_config::class													, $k)
 					->ado('version'		, c_version::class													, $k)
 					->ado('test'		, c_test::class														, $k)
