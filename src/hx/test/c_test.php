@@ -22,7 +22,70 @@ class c_test extends c_base_class
 		// 			->on_test_c_stdclass_to_string()
 
 		//on_test_db();
+		$this->on_test_time();
+		die();
 		$this->on_test_redis();
+		return $this;
+	}
+
+	private function on_test_time (): self
+	{
+		/* <
+		 * 
+		 */
+		
+		$this->dc()->time->push
+		(
+			gf()->fun->time->now()->format()->ymdyis()
+			,
+			gf()->fun->time->now()->format()->ymd()
+			,
+			gf()->fun->time->datetime->now()->format()->ymdyis()
+			
+			,
+			gf()->fun->time->datetime->now()->day()->add(11111)->get()->format()->ymdyis()
+			,
+			gf()->fun->time->datetime->now()->day()->sub(11111)->get()->format()->ymdyis()
+			,
+			gf()->fun->time->datetime->now()->week()->add(1111)->get()->format()->ymdyis()
+			,
+			gf()->fun->time->datetime->now()->week()->sub(11111)->get()->format()->ymdyis()
+			,
+			gf()->fun->time->datetime->now()->month()->add(11111)->get()->format()->ymdyis()
+			,
+			gf()->fun->time->datetime->now()->month()->sub(11111)->get()->format()->ymdyis()
+			,
+			gf()->fun->time->datetime->now()->hour()->add(11111)->get()->format()->ymdyis()
+			,
+			gf()->fun->time->datetime->now()->hour()->sub(11111)->get()->format()->ymdyis()
+						,
+			gf()->fun->time->datetime->now()->minute()->add(11111)->get()->format()->ymdyis()
+			,
+			gf()->fun->time->datetime->now()->minute()->sub(11111)->get()->format()->ymdyis()
+			
+						,
+			gf()->fun->time->datetime->now()->year()->add(100)->get()->format()->ymdyis()
+			,
+			gf()->fun->time->datetime->now()->minute()->sub(100)->get()->format()->ymdyis()
+			,
+			gf()->fun->time->datetime->now()->to_timestamp()
+			,gf()->fun->time->now()->get()
+			,
+			gf()->fun->time->new_with_string_date('Mon, Apr 13, 2026  5:45:26 PM')->to_datetime()->year()->add(100)->get()->format()->ymdyis()
+		
+			
+			
+			
+			
+			
+
+			
+			);
+			
+			
+		gf()->fun->debug->print_r($this->dc()->time,gf()->fun->time->datetime->now()->day()->add(11111)->get()->diff(gf()->fun->time->datetime->now()->to_timestamp())->get()->days);
+
+		/* > */
 		return $this;
 	}
 
@@ -37,29 +100,43 @@ class c_test extends c_base_class
 			$this->dc()->redis->s->push($rt->s()->get('aaa'));
 		});
 		
+		/**
+		 * 
+		 * @var c_redis $redis
+		 * 
+		 */
+		$redis =gf()->cache->redis->new()->open_with_json_file(__DIR__ . '/../../../env/env.json')->connect_ex();
+		$redis->list->with_key('list.bbb')->push('bbb.0')->push('bbb.1')->push('bbb.2');
+		$this->dc()->redis->list->bbb->count = $redis->list->with_key('list.bbb')->pop();
 		
 		
+		for($i=0;$i<10000;$i++)
+		{
+			//gf()->fun->debug->var_dump　($redis->list->with_key('test')->push($i));
+		}
+
 		/**
 		 * @var i_redis_type $rt
 		 */
 		$rt = gf()->cache->redis->open_with_json_file(__DIR__ . '/../../../env/env.json')->connect();
-		$this->dc()->redis->s->push
-		(
-			$rt->s()->set('aaa', gf()->fun->cipher->rand->create())->get('aaa')
-		);
-		
-		$rt->list('list.aaa')->push(0)->push(1)->push(2)->push(3)->for_each(function($k,$v,$timeout)
+		$this->dc()->redis->s->push($rt->s()
+			->set('aaa',gf()->fun->cipher->rand->create())
+			->get('aaa'));
+
+		$rt->list('list.aaa')
+			->push(0)
+			->push(1)
+			->push(2)
+			->push(3)
+			->for_each(function ($k , $v , $timeout)
 		{
-			gf()->fun->debug->print_r($k,$v,$timeout);if($timeout)
+			gf()->fun->debug->print_r($k,$v,$timeout);
+			if ($timeout)
 			{
 				return true;
 			}
 		});
-		
-		
-		
-		
-		
+
 		gf()->fun->debug->print_r($this->dc()->redis);
 		return $this;
 	}

@@ -11,6 +11,7 @@ use hx\fun\array\c_array;
 use hx\fun\weakrefence\c_weakrefence;
 use hx\fun\debug\c_console_color;
 use hx\fun\cipher\c_cipher;
+use hx\fun\time\c_time;
 
 /**
  * @property c_debug 			$debug
@@ -20,6 +21,7 @@ use hx\fun\cipher\c_cipher;
  * @property c_array 			$array
  * @property c_console_color	$cc
  * @property c_cipher			$cipher
+ * @property c_time				$time
  *
  *
  *
@@ -37,6 +39,7 @@ class c_fun extends c_base_class
 					->ado('array'		, c_array::class			, $k)
 					->ado('cc'			, c_console_color::class	, $k)
 					->ado('cipher'		, c_cipher::class			, $k)
+					->ado('time'		, c_time::class				, $k)
 					->$k;
 		/* > */
 	}
@@ -50,6 +53,27 @@ class c_fun extends c_base_class
 			{
 				static $i = 0;
 				gf()->fun->debug->echo_with_nl('[' . $tag . '] ' . $i ++);
+			}
+			
+			public function time()
+			{
+				return new class extends c_base_class
+				{
+					public function start():self
+					{
+						$this->time->start = time();
+						return $this;
+					}
+					public function end ():self 
+					{
+						$this->time_end=time();
+						return $this;
+					}
+					public function elapse ($param) 
+					{
+						;
+					}
+				};
 			}
 		};
 	}

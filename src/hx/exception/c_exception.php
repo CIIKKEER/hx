@@ -15,7 +15,7 @@ class c_exception
 		throw $e;
 	}
 
-	public function throw_with_wrap (int $error_code , \Exception $e)
+	public function throw_with_wrap (int $error_code , \Throwable $e)
 	{
 		throw new \Exception('[' . $error_code . ']->' . $e->getMessage());
 	}

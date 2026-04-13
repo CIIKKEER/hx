@@ -55,6 +55,7 @@ interface i_redis_connect
  * 
  * @author 		Administrator
  * @property	c_redis_s 		$s
+ * @property	c_redis_list	$list
  *
  */
 class c_redis extends c_base_class implements i_redis_connect
@@ -77,8 +78,7 @@ class c_redis extends c_base_class implements i_redis_connect
 	 */
 	public function __get ($k)
 	{
-		return $this->ado('s',$this->make_type_for_redis()->s(),$k)
-					->$k;
+		return $this->ado('s',$this->make_type_for_redis()->s(),$k)->ado('list', $this->make_type_for_redis()->list(''), $k)->$k;
 	}
 	/* > */
 	public function close (): i_redis_connect
@@ -126,7 +126,7 @@ class c_redis extends c_base_class implements i_redis_connect
 	 */
 	public function connect_ex (callable $on_connect_ex = NULL , string $k = 'default'): self
 	{
-		$on_connect_ex === null ? null : $on_connect_ex($this,$this->connect($k));
+		$on_connect_ex === null ? $this->connect($k) : $on_connect_ex($this,$this->connect($k));
 		return $this;
 	}
 }
@@ -162,6 +162,13 @@ class c_redis_list extends c_base_class implements i_redis_set_get_for_list
 		$this->k = $k;
 	}
 
+	/**
+	 * 
+	 * 
+	 * @see \hx\cache\redis\i_redis_set_get_for_list::count()
+	 * @throws \Exception
+	 * 
+	 */
 	public function count (): int
 	{
 		return $this->c_redis_type->c_redis->rc->lLen($this->k);
@@ -198,6 +205,12 @@ class c_redis_list extends c_base_class implements i_redis_set_get_for_list
 	public function popb (int $timeout = 1): mixed
 	{
 		return $this->c_redis_type->c_redis->rc->brPop($this->k,$timeout);
+	}
+
+	public function with_key (string $k): self
+	{
+		$this->k = $k;
+		return $this;
 	}
 }
 
