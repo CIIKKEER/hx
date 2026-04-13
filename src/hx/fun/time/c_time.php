@@ -83,7 +83,7 @@ class c_time extends c_base_class
 				$this->c_time = $w->get();
 			}
 
-			public function ymdyis (): string
+			public function ymdhis (): string
 			{
 				return date('Y-m-d H:i:s',$this->c_time->timestamp);
 			}
@@ -93,7 +93,7 @@ class c_time extends c_base_class
 				return date('Y-m-d',$this->c_time->timestamp);
 			}
 
-			public function yis (): string
+			public function his (): string
 			{
 				return date('H:i:s',$this->c_time->timestamp);
 			}

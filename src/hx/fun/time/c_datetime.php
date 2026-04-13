@@ -281,5 +281,13 @@ class c_datetime_format extends c_base_class
 	{
 		return $this->c_datetime->datetime->format('Y-m-d H:i:s');
 	}
+	public function ymd (): string
+	{
+		return $this->c_datetime->datetime->format('Y-m-d');
+	}
+	public function his (): string
+	{
+		return $this->c_datetime->datetime->format('H:i:s');
+	}
 }
 

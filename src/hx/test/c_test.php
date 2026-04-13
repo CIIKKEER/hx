@@ -36,7 +36,7 @@ class c_test extends c_base_class
 		
 		$this->dc()->time->push
 		(
-			gf()->fun->time->now()->format()->ymdyis()
+			gf()->fun->time->now()->format()->ymdhis()
 			,
 			gf()->fun->time->now()->format()->ymd()
 		 
