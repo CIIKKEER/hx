@@ -23,7 +23,7 @@ class c_test extends c_base_class
 
 		//on_test_db();
 		$this->on_test_time();
-		die();
+
 		$this->on_test_redis();
 		return $this;
 	}
@@ -39,47 +39,10 @@ class c_test extends c_base_class
 			gf()->fun->time->now()->format()->ymdyis()
 			,
 			gf()->fun->time->now()->format()->ymd()
+		 
 			,
-			gf()->fun->time->datetime->now()->format()->ymdyis()
-			
-			,
-			gf()->fun->time->datetime->now()->day()->add(11111)->get()->format()->ymdyis()
-			,
-			gf()->fun->time->datetime->now()->day()->sub(11111)->get()->format()->ymdyis()
-			,
-			gf()->fun->time->datetime->now()->week()->add(1111)->get()->format()->ymdyis()
-			,
-			gf()->fun->time->datetime->now()->week()->sub(11111)->get()->format()->ymdyis()
-			,
-			gf()->fun->time->datetime->now()->month()->add(11111)->get()->format()->ymdyis()
-			,
-			gf()->fun->time->datetime->now()->month()->sub(11111)->get()->format()->ymdyis()
-			,
-			gf()->fun->time->datetime->now()->hour()->add(11111)->get()->format()->ymdyis()
-			,
-			gf()->fun->time->datetime->now()->hour()->sub(11111)->get()->format()->ymdyis()
-						,
-			gf()->fun->time->datetime->now()->minute()->add(11111)->get()->format()->ymdyis()
-			,
-			gf()->fun->time->datetime->now()->minute()->sub(11111)->get()->format()->ymdyis()
-			
-						,
-			gf()->fun->time->datetime->now()->year()->add(100)->get()->format()->ymdyis()
-			,
-			gf()->fun->time->datetime->now()->minute()->sub(100)->get()->format()->ymdyis()
-			,
-			gf()->fun->time->datetime->now()->to_timestamp()
-			,gf()->fun->time->now()->get()
-			,
-			gf()->fun->time->new_with_string_date('Mon, Apr 13, 2026  5:45:26 PM')->to_datetime()->year()->add(100)->get()->format()->ymdyis()
+			gf()->fun->time->new_with_string_date('Mon, Apr 13, 2026  5:45:26 PM')->to_datetime()->year()->add(100)->get()->format()->ymdhis()
 		
-			
-			
-			
-			
-			
-
-			
 			);
 			
 			
@@ -110,10 +73,15 @@ class c_test extends c_base_class
 		$this->dc()->redis->list->bbb->count = $redis->list->with_key('list.bbb')->pop();
 		
 		
-		for($i=0;$i<10000;$i++)
+		$this->dc()->redis->list->elapse =gf()->fun->test()->elapse()->diff_with_millisecond()->do ( function() use($redis)
 		{
-			//gf()->fun->debug->var_dump　($redis->list->with_key('test')->push($i));
-		}
+			for($i=0;$i<1000;$i++)
+			{
+				$redis->list->with_key('test')->push($i);
+			}
+		})->get();
+		
+		
 
 		/**
 		 * @var i_redis_type $rt

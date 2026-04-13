@@ -12,6 +12,7 @@ use hx\fun\weakrefence\c_weakrefence;
 use hx\fun\debug\c_console_color;
 use hx\fun\cipher\c_cipher;
 use hx\fun\time\c_time;
+use hx\fun\time\c_hrtime;
 
 /**
  * @property c_debug 			$debug
@@ -52,28 +53,12 @@ class c_fun extends c_base_class
 			public function running_count (string $tag = '')
 			{
 				static $i = 0;
-				gf()->fun->debug->echo_with_nl('[' . $tag . '] ' . $i ++);
+				gf()->fun->debug->echo_with_nl('[' . $tag . '] ' . $i++);
 			}
-			
-			public function time()
+
+			public function elapse ()
 			{
-				return new class extends c_base_class
-				{
-					public function start():self
-					{
-						$this->time->start = time();
-						return $this;
-					}
-					public function end ():self 
-					{
-						$this->time_end=time();
-						return $this;
-					}
-					public function elapse ($param) 
-					{
-						;
-					}
-				};
+				return new c_hrtime();
 			}
 		};
 	}

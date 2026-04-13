@@ -277,7 +277,7 @@ class c_datetime_format extends c_base_class
 		$this->c_datetime = $w->get();
 	}
 
-	public function ymdyis (): string
+	public function ymdhis (): string
 	{
 		return $this->c_datetime->datetime->format('Y-m-d H:i:s');
 	}
