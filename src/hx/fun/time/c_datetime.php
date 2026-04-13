@@ -198,13 +198,13 @@ class c_datetime_month extends c_base_class
 
 	public function add (int $month): self
 	{
-		$this->c_datetime->datetime->add(new \DateInterval("PT" . $month . "M"));
+		$this->c_datetime->datetime->add(new \DateInterval("P" . $month . "M"));
 		return $this;
 	}
 
 	public function sub (int $month): self
 	{
-		$this->c_datetime->datetime->sub(new \DateInterval("PT" . $month . "M"));
+		$this->c_datetime->datetime->sub(new \DateInterval("P" . $month . "M"));
 		return $this;
 	}
 
