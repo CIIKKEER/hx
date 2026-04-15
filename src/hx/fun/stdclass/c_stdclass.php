@@ -140,4 +140,65 @@ class c_stdclass extends \stdClass
 		}
 		return $this;
 	}
+
+	/**
+	 * @des 	The property $k exists in the current object
+	 * @param 	string $k
+	 * @return 	bool
+	 */
+	public function exist (string $k): bool
+	{
+		return property_exists($this,$k);
+	}
+
+	public function set ($k , $v): self
+	{
+		$this->{$k} = $v;
+		return $this;
+	}
+
+	public function get ($k)
+	{
+		return $this->{$k};
+	}
+
+	public function is_ok ($k , mixed $v = NULL): self
+	{
+		$ok = $this->is_empty($k);
+		if ($ok === FALSE/* value is ok */ && $v != NULL)
+		{
+			$this->set($k,is_callable($v) ? $v($this->get($k)) : $v);
+		}
+
+		return $this;
+	}
+
+	/** 	
+	 * @desc	Check whether the value of the current property $k is empty
+	 * @param 	string 			$k
+	 * @param 	mixed 			$v　: if the value of property $k is empty and the value of $v is not null then I will update the value of property $k with $v
+	 * @return 	mixed 
+	 * 
+	 * 
+	 */
+	/* < */
+	public function is_empty (string $k , mixed $v = null): mixed
+	{
+		$vx = $this->get($k);if (is_object($vx))
+		{
+			$ok = count(get_object_vars($vx)) === 0 ? true : false;
+		}
+		else
+		{
+			$ok = empty($vx) ? true : false;
+		}
+
+		if ($ok === TRUE && $v !== NULL)
+		{
+			$this->set($k,is_callable($v) ? $v() : $v);
+		}
+
+		return is_callable($v) ? $this : $ok;
+	}
+	/* > */
 }

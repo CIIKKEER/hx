@@ -2,6 +2,8 @@
 namespace hx\fun\array;
 
 use hx\c_base_class;
+use hx\c_ok_error;
+use hx\i_ok_error;
 
 class c_array extends c_base_class
 {
@@ -44,8 +46,8 @@ class c_array extends c_base_class
 
 	/**
 	 * 
-	 * @param array $ar
-	 * @return c_array
+	 * @param 	array $ar
+	 * @return 	c_array
 	 */
 	public function new_with_array (array $ar): c_array
 	{
@@ -58,6 +60,24 @@ class c_array extends c_base_class
 	{
 		$this->empty() === FALSE ? $on_ok($this->m_ar) : null;
 		return $this;
+	}
+
+	public function search (mixed $v)
+	{
+		return new class($this->make_weak_reference(),$v) extends c_ok_error
+		{
+
+			/** <
+			 * 
+			 * @param \WeakReference 	$w
+			 * @param mixed				$v : search value
+			 */
+			public function __construct (\WeakReference $w , mixed $v)
+			{
+				$this->set_ok(array_search($v,$w->get()->get(),true) !== false ? true : false);
+			}
+			/* > */
+		};
 	}
 
 	public function shift ()

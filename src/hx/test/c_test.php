@@ -23,7 +23,7 @@ class c_test extends c_base_class
 
 		//on_test_db();
 		$this->on_test_time();
-
+	die;
 		$this->on_test_redis();
 		return $this;
 	}

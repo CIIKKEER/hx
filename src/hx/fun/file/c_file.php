@@ -32,11 +32,18 @@ class c_file extends c_base_class
 		return file_exists($filename);
 	}
 
-	public function realpath ($path): string|bool
+	/**
+	 * 
+	 * @param 	string $path
+	 * @return 	string|bool
+	 * @throws	\Exception
+	 * 
+	 */
+	public function realpath ($path): string
 	{
 		/* < */$r = realpath($path);if ($r === FALSE)/* > */
 		{
-			return $r;
+			throw gf()->exception->throw(90000000,'the file does not exist : ' . $path);
 		}
 		else
 		{

@@ -9,6 +9,8 @@ use hx\config\c_config;
 use hx\exception\c_exception;
 use hx\test\c_test;
 use hx\cache\c_cache;
+use hx\cli\c_cli;
+use hx\os\c_os;
 
 /**
  * @author 		Administrator
@@ -18,7 +20,9 @@ use hx\cache\c_cache;
  * @property 	c_exception 	$exception
  * @property 	c_version		$version
  * @property	c_test			$test
- * @property	c_cache			$cache 		
+ * @property	c_cache			$cache
+ * @property	c_cli			$cli
+ * @property	c_os			$os	
  *
  *
  *
@@ -35,6 +39,8 @@ class hx extends c_base_class
 					->ado('config'		, c_config::class													, $k)
 					->ado('version'		, c_version::class													, $k)
 					->ado('test'		, c_test::class														, $k)
+					->ado('cli'			, c_cli::class														, $k)
+					->ado('os'			, c_os::class														, $k)
 					->ado('exception'	, function (){return (new c_exception())->set_exception_handler();}	, $k)
 					->$k;
 		/* > */
