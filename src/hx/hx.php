@@ -11,6 +11,7 @@ use hx\test\c_test;
 use hx\cache\c_cache;
 use hx\cli\c_cli;
 use hx\os\c_os;
+use hx\route\c_route;
 
 /**
  * @author 		Administrator
@@ -23,6 +24,7 @@ use hx\os\c_os;
  * @property	c_cache			$cache
  * @property	c_cli			$cli
  * @property	c_os			$os	
+ * @property	c_route			$route
  *
  *
  *
@@ -41,6 +43,7 @@ class hx extends c_base_class
 					->ado('test'		, c_test::class														, $k)
 					->ado('cli'			, c_cli::class														, $k)
 					->ado('os'			, c_os::class														, $k)
+					->ado('route'		, c_route::class													, $k)
 					->ado('exception'	, function (){return (new c_exception())->set_exception_handler();}	, $k)
 					->$k;
 		/* > */

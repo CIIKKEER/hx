@@ -19,14 +19,19 @@ class c_test extends c_base_class
 	public function go (): c_test
 	{
 		$this->on_test_cc();
-		// 			->on_test_c_stdclass_to_string()
+		
 
-		//on_test_db();
-		$this->on_test_time();
-	die;
+		$this->on_test_route();die;
+		$this->on_test_time();die;
 		$this->on_test_redis();
 		return $this;
 	}
+	private function on_test_route():self
+	{
+		gf()->fun->debug->print_r(gf()->route->about());
+		return $this;
+	}
+	
 
 	private function on_test_time (): self
 	{
