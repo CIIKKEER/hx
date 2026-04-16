@@ -155,6 +155,10 @@ class c_test extends c_base_class
 			gf()->fun->debug->print_r($t->query("insert into bbb.bbb(user_id,user_address)values(?,?);")->ai(888)->as(gf()->fun->cipher->rand->uuid()->v4())->go()->get_insert_id());
 			
 		});
+		
+		$this->ado_inject('ccc', new class{public function about(){gf()->fun->debug->print_r('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.reject');}});
+		$this->ccc->about();
+		
 		die('ok');
 		
 		$db->connect()->auto

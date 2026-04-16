@@ -43,7 +43,7 @@ abstract class c_base_class extends \stdClass
 	 *  
 	 *  
 	 */
-	public function ado (string $k , string |callable|object $v , string $c): c_base_class
+	public function ado (string $k , string |callable|object $v , string $c): self
 	{
 		if (property_exists($this,$k) === false)
 		{
@@ -57,7 +57,7 @@ abstract class c_base_class extends \stdClass
 
 	/**
 	 * @desc	data container
-	 * @return 	\hx\fun\stdclass\c_stdclass
+	 * @return 	c_stdclass
 	 */
 	public function dc (): c_stdclass
 	{
@@ -66,6 +66,7 @@ abstract class c_base_class extends \stdClass
 		 */
 		return $this->dc === null ? (function () {$this->dc = gf()->fun->stdclass->new();return $this->dc;})() : $this->dc;
 		/* > */
+		
 	}
 
 	/**

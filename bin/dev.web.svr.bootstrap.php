@@ -14,6 +14,10 @@ $document_root= str_replace('\\','/', $_SERVER['DOCUMENT_ROOT']);
 $request_uri  = $_SERVER ['REQUEST_URI'];
 $request_file = strtolower(@array_pop (explode ('/',$request_uri)));
 
+
+# print_r($_SERVER);print_r($request_file);echo"\n";die($request_uri);
+
+
 # normal file
 #
 #
@@ -72,7 +76,12 @@ foreach ($ar_normal_file as $one_file_ex => $one_file_ex_content_type)
 	# $_SERVER['SCRIPT_NAME'] = '/index.php';
 }
 
-$request_local_file = $document_root.(explode('?',$request_uri) [0]);
+# $request_local_file = $document_root.(explode('?',$request_uri) [0]);
+#
+#
+$request_local_file = $document_root.$_SERVER['SCRIPT_NAME'];
 return require ($request_local_file);
-return require ('public/index.php');
+#
+#
+# return require ('public/index.php');
 /* > */
