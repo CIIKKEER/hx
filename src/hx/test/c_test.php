@@ -19,19 +19,26 @@ class c_test extends c_base_class
 	public function go (): c_test
 	{
 		$this->on_test_cc();
-		
+		$this->on_test_db();
+		die();
 
-		$this->on_test_route();die;
-		$this->on_test_time();die;
+		$this->on_test_route();
+		die();
+		$this->on_test_time();
+		die();
 		$this->on_test_redis();
 		return $this;
 	}
-	private function on_test_route():self
+
+	private function on_test_route (): self
 	{
-		gf()->fun->debug->print_r(gf()->route->about());
+		gf()->route->get('/user/login',function ()
+		{
+		});
+
+		gf()->fun->debug->print_r(gf()->route->get_route());
 		return $this;
 	}
-	
 
 	private function on_test_time (): self
 	{
@@ -141,7 +148,16 @@ class c_test extends c_base_class
 		 * @var i_db $db
 		 * 
 		 */
-		$db = gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json');	$db->connect()->auto
+		$db = gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json');	
+		
+		$db->connect()->auto(function(i_trans $t)
+		{
+			gf()->fun->debug->print_r($t->query("insert into bbb.bbb(user_id,user_address)values(?,?);")->ai(888)->as(gf()->fun->cipher->rand->uuid()->v4())->go()->get_insert_id());
+			
+		});
+		die('ok');
+		
+		$db->connect()->auto
 		(
 			function (i_trans $i) 
 			{

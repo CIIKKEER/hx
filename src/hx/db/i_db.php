@@ -5,6 +5,14 @@ use hx\db\mysqli\c_mysql_connection_info;
 use hx\fun\stdclass\c_stdclass;
 use hx\db\mysqli\i_mysql_connection_info;
 
+interface i_query_status
+{
+
+	public function get_affected_rows (): int;
+
+	public function get_insert_id (): int;
+}
+
 interface i_bindx
 {
 
@@ -23,7 +31,7 @@ interface i_bindx
 	public function go (): i_query;
 }
 
-interface i_query
+interface i_query extends i_query_status
 {
 
 	/**
@@ -38,6 +46,8 @@ interface i_query
 	public function get_single_row (): c_stdclass;
 
 	public function get_single_value (): mixed;
+
+ 
 }
 
 interface i_trans

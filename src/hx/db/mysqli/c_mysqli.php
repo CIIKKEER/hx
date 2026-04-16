@@ -11,6 +11,7 @@ use hx\fun\stdclass\c_stdclass;
 use hx\db\i_bindx;
 use hx\db\i_trans;
 use hx\fun\array\c_array;
+use hx\db\i_query_status;
 
 /**
  *
@@ -117,9 +118,9 @@ class c_trans extends c_base_class implements i_trans
 		}
 		catch (\Throwable  $e)
 		{
-			$ok = TRUE;
+			$ok = false;
 		}
-		$ok === true ? $this->rollback() : $this->commit();
+		in_array($ok,[null,true],TRUE) ? $this->commit() : $this->rollback();
 		return $this;
 	}
 	/* > */
@@ -392,7 +393,7 @@ class c_bind_parameter extends c_base_class implements i_bindx
 	}
 }
 
-class c_query extends c_base_class implements i_query
+class c_query extends c_base_class implements i_query  
 {
 	private c_bind_parameter $bp;
 	private c_stdclass $data;
@@ -415,21 +416,20 @@ class c_query extends c_base_class implements i_query
 		unset($this->data);
 	}
 
+	/* < execute SQL operations including but not limited to, SELECT, UPDATE, and DELETE
+	 * 
+	 *
+	 */ 
 	private function execute (): c_query
 	{
-		/* < execute SQL operations including but not limited to, SELECT, UPDATE, and DELETE
-		 * 
-		 *
-		 */ 
 		$this->bp->stmt->execute();$mr = $this->bp->stmt->get_result();if ($mr !== false)
 		{
 			$this->mr = $mr;
 			$this->fetch_assoc();
 		}
-		/* > */
 		return $this;
 	}
-
+	/* > */
 	private function fetch_assoc (): c_query
 	{
 		/* < get data */$i = 0;for (;;)
@@ -450,6 +450,7 @@ class c_query extends c_base_class implements i_query
 	 * 
 	 * {@inheritDoc}
 	 * @see \hx\db\i_query::for_each()
+	 * 
 	 */
 	public function for_each (callable $on_for_each): i_query
 	{
@@ -457,10 +458,16 @@ class c_query extends c_base_class implements i_query
 		return $this;
 	}
 
+	public function getx ()
+	{
+		return $this->bp->mysqli;
+	}
+
 	/**
 	 * 
 	 * {@inheritDoc}
 	 * @see \hx\db\i_query::get_single_row()
+	 * 
 	 */
 	public function get_single_row (): c_stdclass
 	{
@@ -479,10 +486,16 @@ class c_query extends c_base_class implements i_query
 
 	public function get_single_value (): mixed
 	{
-		/** < 
-		 * @var c_array $ar
-		 */
-		return $this->get_single_row()->to_array()->shift();
-		/* > */
+		/* < */return $this->get_single_row()->to_array()->shift();/* > */
+	}
+
+	public function get_affected_rows (): int
+	{
+		return $this->bp->mysqli->affected_rows;
+	}
+
+	public function get_insert_id (): int
+	{
+		return $this->bp->mysqli->insert_id;
 	}
 }
