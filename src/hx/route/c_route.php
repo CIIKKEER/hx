@@ -7,14 +7,7 @@ use hx\fun\stdclass\c_stdclass;
 interface i_route_action
 {
 
-	/**
-	 * 
-	 * @param 	string $route_url
-	 * @param 	callable (i_request $q,i_response $s) : void $action
-	 * @return 	i_route_action
-	 * 
-	 */
-	public function add (string $route_url , callable $action): self;
+	public function add (string $route_url , mixed $action): self;
 }
 
 interface i_route_url
@@ -26,9 +19,17 @@ interface i_route_url
 interface i_response
 {
 
-	public function success (mixed $content , string $message = ''): array;
+	public function success (mixed $content , string $message = '' , int $code = 0): array;
 
-	public function error (mixed $content , string $message = ''): array;
+	public function error (mixed $content , string $message = '' , int $code = 0): array;
+}
+
+interface i_json_to_object
+{
+
+	public function to_string (): string;
+
+	public function to_object (): c_stdclass;
 }
 
 interface i_request
@@ -50,7 +51,7 @@ interface i_request
 
 	public function url_route (): string;
 
-	public function raw_body_content (): string;
+	public function raw_body_content (): i_json_to_object;
 
 	public function get ($k): mixed;
 }
@@ -101,19 +102,88 @@ class c_request extends c_base_class implements i_request
 		return $this->r->query_string;
 	}
 
-	public function url_route (): string
+	private function normalize_path (string $path): string
 	{
-		return '/' . ltrim($this->path_info(),$this->script_name());
+		$path = str_replace('\\','/',$path);
+		$path = preg_replace('#/+#','/',$path);
+		$parts = explode('/',trim($path,'/'));
+		$resolved = [ ];
+		foreach ($parts as $part)
+		{
+			if ($part === '' || $part === '.')
+			{
+				continue;
+			}
+			if ($part === '..')
+			{
+				if (!empty($resolved))
+				{
+					array_pop($resolved);
+				}
+				continue;
+			}
+			$resolved[] = $part;
+		}
+		return '/' . implode('/',$resolved);
 	}
 
-	public function raw_body_content (): string
+	public function url_route (): string
 	{
-		return file_get_contents('php://input');
+		$uriRaw = explode('?',$this->request_uri())[0];
+		$scriptRaw = $this->script_name();
+		$uri = rawurldecode($uriRaw);
+		$script = rawurldecode($scriptRaw);
+		$uri = $this->normalize_path($uri);
+		$script = $this->normalize_path($script);
+		$scriptDir = $this->normalize_path(dirname($script));
+		$path = str_starts_with($uri,$script) ? substr($uri,strlen($script)) : $uri;
+		if ($scriptDir !== '/' && $scriptDir !== '')
+		{
+			$len = strlen($scriptDir);
+			if (str_starts_with($path,$scriptDir) && (strlen($path) === $len || $path[$len] === '/'))
+			{
+				$path = substr($path,$len);
+			}
+		}
+
+		$path = '/' . ltrim($path,'/');
+		$path = rtrim($path,'/');
+
+		return $path === '' ? '/' : $path;
 	}
 
 	public function get ($k): mixed
 	{
 		return array_key_exists($k,$_REQUEST) ? $_REQUEST[$k] : '';
+	}
+
+	public function raw_body_content (): i_json_to_object
+	{
+		return new class() extends c_base_class implements i_json_to_object
+		{
+
+			public function __construct ()
+			{
+				$r = file_get_contents('php://input');
+				if ($r === FALSE)
+				{
+					gf()->exception->throw(880003,'get raw php input stream error');
+				}
+
+				$this->input = trim($r);
+			}
+
+			public function to_string (): string
+			{
+				return $this->input;
+			}
+
+			public function to_object (): c_stdclass
+			{
+				return gf()->fun->json->decoder($this->to_string())
+					->ok();
+			}
+		};
 	}
 }
 
@@ -137,10 +207,10 @@ class c_route extends c_base_class implements i_route_action
 		return self::version;
 	}
 
-	public function go (): i_response
+	public function go ()
 	{
 		$this->c_request = new c_request();
-		return new c_response($this->make_weak_reference());
+		(new c_response($this))->do_action();
 	}
 
 	public function get_action_by_route_url (string $k): mixed
@@ -150,7 +220,7 @@ class c_route extends c_base_class implements i_route_action
 		 * @var c_stdclass $au
 		 * 
 		 */
-		$au = $this->get_route()->get($k);if ($au->count() === 0)
+		$au = $this->get_route()->get($k);if ($au===null||$au->count() === 0)
 		{
 			return false;
 		}
@@ -161,27 +231,63 @@ class c_route extends c_base_class implements i_route_action
 		/* > */
 	}
 
-	public function add (string $route_url , callable $action): self
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \hx\route\i_route_action::add()
+	 * @throws \Exception
+	 * 
+	 */
+	public function add (string $route_url , mixed $action): self
 	{
-		(new c_route_url($this->make_weak_reference()))->add($route_url,$action);
+		if (is_array($action) && count($action) === 2)
+		{
+			$class = $action[0];
+			$method = $action[1];
+			if (class_exists($class) === FALSE)
+			{
+				return gf()->exception->throw(880002,$class . '->' . $method . ' not found');
+			}
+			$action = function (i_request $r , i_response $s) use ( $class , $method)
+			{
+				$o = (new $class());
+				if (is_callable([ $o,$method]) === FALSE)
+				{
+					return gf()->exception->throw(880004,$class . '->' . $method . ' cannot be called');
+				}
+
+				return $o->$method($r,$s);
+			};
+		}
+		else
+		{
+			if (is_callable($action) === FALSE)
+			{
+				gf()->exception->throw(880007,$route_url . ' : the route action must be callable');
+			}
+		}
+
+		# add a route url
+		#
+		#
+		(new c_route_url($this))->add($route_url,$action);
 		return $this;
 	}
 }
 
 class c_route_url extends c_base_class implements i_route_url
 {
-	private string $route_url;
 	private c_route $c_route;
 
-	public function __construct (\WeakReference $w)
+	public function __construct ($w)
 	{
-		$this->c_route = $w->get();
+		$this->c_route = $w;
 	}
 
 	public function add (string $k , mixed $action): self
 	{
-		$this->c_route->get_route()->$k->route_url = $k;
-		$this->c_route->get_route()->$k->action = $action;
+		$this->c_route->get_route()->{$k}->route_url = $k;
+		$this->c_route->get_route()->{$k}->action = $action;
 		return $this;
 	}
 }
@@ -191,21 +297,34 @@ class c_response extends c_base_class implements i_response
 	private c_route $c_route;
 	private array $response_data;
 
-	public function __construct (\WeakReference $w)
+	public function __construct ($w)
 	{
-		$this->c_route = $w->get();
-		$this->do_action();
+		$this->c_route = $w;
 	}
 
-	private function do_action ()
+	public function do_action ()
 	{
 		$action = $this->c_route->get_action_by_route_url($this->c_route->c_request->url_route());
 		if ($action === false)
 		{
-			return $this->error_with_only_message('route.url : ' . $this->c_route->c_request->url_route() . 'ccould not find any action',880000);
+			$this->response_data = $this->error('','route.url : [' . $this->c_route->c_request->url_route() . '] could not find any action',880000);
 		}
-
-		$this->response_data = $this->is_standard_response($action($this->c_route->c_request,$this));
+		else
+		{
+			$r = null;
+			try
+			{
+				$r = $action($this->c_route->c_request,$this);
+			}
+			catch (\Throwable $e)
+			{
+				$r = $this->error('','an error occurred during the internal call of the URL route action',880006);
+			}
+			finally 
+			{
+				$this->response_data = $this->is_standard_response($r);
+			}
+		}
 		$this->echo();
 	}
 
@@ -214,12 +333,12 @@ class c_response extends c_base_class implements i_response
 		$ok = false;
 		if (is_array($v) && array_key_exists('status',$v) && array_key_exists('code',$v) && array_key_exists('content',$v) && array_key_exists('message',$v))
 		{
-			if (in_array($v['code'],[ 0,1],TRUE))
+			if (in_array($v['status'],[ 0,1],TRUE))
 			{
 				$ok = true;
 			}
 		}
-		return $ok === true ? $v : $this->error($v,'the return value of the route URL action is not a standard response',880001);
+		return $ok === true ? $v : $this->error($v,'route.url : [' . $this->c_route->c_request->url_route() . '] the return value of the route URL action is not a standard response',880001);
 	}
 
 	public function get_response_data (): array
@@ -242,18 +361,16 @@ class c_response extends c_base_class implements i_response
 		return [ 'status' => $status,'code' => $code,'message' => $message,'content' => $content];
 	}
 
-	private function error_with_only_message (string $message , int $code = 0): void
-	{
-		$this->error('',$message,$code);
-	}
-
-	/* < echo the standard JSON content string back to the caller 
-	 * 
-	 * */
 	private function echo (): void
 	{
-		echo gf()->fun->cc->as(gf()->fun->json->encoder($this->response_data))->get();
+		if (headers_sent() === FALSE)
+		{
+			header('Content-Type: application/json; charset=utf-8');
+			http_response_code(200);
+		}
+
+		echo gf()->fun->cc->as(gf()->fun->json->encoder($this->response_data))
+			->get();
 	}
-	/* > */
 }
 

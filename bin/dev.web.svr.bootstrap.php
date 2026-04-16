@@ -79,8 +79,15 @@ foreach ($ar_normal_file as $one_file_ex => $one_file_ex_content_type)
 # $request_local_file = $document_root.(explode('?',$request_uri) [0]);
 #
 #
-$request_local_file = $document_root.$_SERVER['SCRIPT_NAME'];
-return require ($request_local_file);
+$request_local_file = $document_root . $_SERVER['SCRIPT_NAME'];
+if (file_exists($request_local_file))
+{
+	return require ($request_local_file);
+}
+else
+{
+	die('file not found : ' . $request_local_file);
+}
 #
 #
 # return require ('public/index.php');
