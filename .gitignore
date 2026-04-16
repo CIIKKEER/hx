@@ -1,6 +1,7 @@
 .buildpath
 .project
 .settings/
+.swp
 ghp_*
 vendor/
 /test
