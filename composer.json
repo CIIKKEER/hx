@@ -2,9 +2,11 @@
 	"autoload" : {
 		"psr-4" : {
 			"hx\\" : "src/hx"
-		}
-        ,
-        "files":["src/hx/gf.php"]
+			
+		},
+		"files" : [
+			"src/hx/gf.php"
+		]
 	},
 	"authors" : [{
 			"name" : "ciikkeer",
@@ -18,8 +20,8 @@
 	"keywords" : [
 		"php fast library"
 	],
-	"require": {
-		"colinmollenhour/credis": "1.17.1",
-        "php": "^8.1"
+	"require" : {
+		"colinmollenhour/credis" : "1.17.1",
+		"php" : "^8.1"
 	}
 }

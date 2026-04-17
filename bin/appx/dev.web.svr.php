@@ -1,16 +1,9 @@
 <?php
+require_once __DIR__.'/../auto.load.php';
 
-/* <
- * 
- */
-declare(strict_types = 1);require_once __DIR__ . '/../vendor/autoload.php';
-
-/* 
- * 
- * 
- * > */
 use hx\c_base_class;
 use hx\cli\c_cli;
+
 
 class c_dev_web_svr extends c_base_class
 {
