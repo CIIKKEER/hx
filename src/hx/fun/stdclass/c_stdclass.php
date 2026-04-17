@@ -87,8 +87,20 @@ class c_stdclass extends \stdClass
 		return $this;
 	}
 
-	public function new_with_stdclass ($stdclass): c_stdclass
+	/**
+	 * @desc 	I will create a class instance from a standard stdClass object
+	 * @param 	\stdClass $stdclass
+	 * @return 	c_stdclass
+	 * @throws	\Exception
+	 * 
+	 */
+	public function new_with_stdclass (object $stdclass): c_stdclass
 	{
+		if (is_object($stdclass) === FALSE)
+		{
+			gf()->exception->throw(770000,'parameter type mismatch');
+		}
+
 		/* < */$o = $this->new();foreach ($stdclass as $k => $v)/* > */
 		{
 			$o->{$k} = $v;
@@ -162,15 +174,15 @@ class c_stdclass extends \stdClass
 		return $this->{$k};
 	}
 
-	public function is_ok ($k , mixed $v = NULL): self
+	public function is_ok ($k , mixed $v = NULL): mixed
 	{
 		$ok = $this->is_empty($k);
-		if ($ok === FALSE/* value is ok */ && $v != NULL)
+		if ($ok === FALSE/* the value of current property is not empty  */ && $v != NULL)
 		{
 			$this->set($k,is_callable($v) ? $v($this->get($k)) : $v);
 		}
 
-		return $this;
+		return is_callable($v) ? $this : !$ok;
 	}
 
 	/** 	

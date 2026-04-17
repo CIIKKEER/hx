@@ -307,7 +307,7 @@ class c_response extends c_base_class implements i_response
 		$action = $this->c_route->get_action_by_route_url($this->c_route->c_request->url_route());
 		if ($action === false)
 		{
-			$this->response_data = $this->error('','route.url : [' . $this->c_route->c_request->url_route() . '] could not find any action',880000);
+			$this->response_data = $this->error($this->c_route->c_request->url_route(),' could not find any action',880000);
 		}
 		else
 		{
@@ -318,7 +318,8 @@ class c_response extends c_base_class implements i_response
 			}
 			catch (\Throwable $e)
 			{
-				$r = $this->error('','an error occurred during the internal call of the URL route action',880006);
+				print_r($e);
+				$r = $this->error($this->c_route->c_request->url_route(),'an error occurred during the internal call of the URL route action : ' . $e->getMessage(),880006);
 			}
 			finally 
 			{

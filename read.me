@@ -1,90 +1,103 @@
-
-+---------------------------------------------------------------------------------------+
-|==========================================ciikkeer/hx==================================|
-+---------------------------------------------------------------------------------------+
-|																						|
-| test.demo 	: simple and joyful coding												|
-| author 		: BREEZEER																|
-| release 		: Tue, Apr 07, 2026  7:34:32 PM											|
-| version		: 1.0																	|
-|																						|
-+---------------------------------------------------------------------------------------+
+ test.demo              : simple and joyful coding                                                                                              
+ author                 : BREEZEER                                                                                                                      
+ release                : Tue, Apr 07, 2026  7:34:32 PM                                                                 
+ version                : 1.0                                                                                                           
+ email                  : lch1025@qq.com
+ description            : HX project library has been released with Beta 1.0. library includes several features such as database Redis routing and JSON tools. I designed the core functionality of this library to use chainable objects with fluent native syntax so you can start using immediately via PHP Composer.
 
 <?php
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-/* < */
-gf()->fun->debug->print_r
-(
-	gf()->db->mysqli->open_with_env_json(__DIR__ . '/../env/env.json')->connect()->get_db_information(),
-	1
-	,
-	2
-	,
-	3
-	,
-	gf()->config->clickhouse->get_with_env_json('click.house.configuration.by.environment.file')
-	,
-	gf()->db->mysqli->open_with_mysql_connection_info(gf()->config->mysql->get_with_env_json(__DIR__ . '/../env/env.json'))->connect('aaa')->get_db_information()
-	
-	,
-	
-	gf()->fun->file->ini->open_with_ini_file(__DIR__ . '/../env/env.ini')
-	
-	,
-	gf()->fun->file->ini->open_with_local_php_code_file(__DIR__ . '/../env/env.config')
-);
+/* i will connect to the MySQL server using the mysqlnd native driver
+ *
+ */
+gf()->db->mysqli->open_with_env_json(__DIR__ . '/../env/env.json')->connect()->get_db_information(),
 
-/* > */
+/**
+ * @desc connect the Redis server       
+ * @var  c_redis $redis
+ * 
+ */
+$redis =gf()->cache->redis->new()->open_with_json_file(__DIR__ . '/../../../env/env.json')->connect_ex();
+$redis->list->with_key('list.bbb')->push('bbb.0')->push('bbb.1')->push('bbb.2');
+$redis->list->with_key('list.bbb')->pop();
+
+gf()->fun->test()->elapse()->diff_with_millisecond()->do ( function() use ($redis)
+{
+        for($i=0;$i<1000;$i++)
+        {
+                $redis->list->with_key('test')->push($i);
+        }
+})->get();
+
+/**
+ * @var i_redis_type $rt
+ *
+ */
+$rt = gf()->cache->redis->open_with_json_file(__DIR__ . '/../../../env/env.json')->connect();
+
+
 
 # env.ini
 #
 #
 [mysql]
-	default[hostname] 	= 'x.x.x';
-	default[port] 		= 3306
-	default[username] 	= 'rootx'
-	default[password] 	= ''
-	
-	aaa[hostname] 		= 'xx.x.x';
-	aaa[port] 			= 3306
-	aaa[username] 		= 'rootx'
-	aaa[password] 		= ''
-	
+        default[hostname]       = 'x.x.x';
+        default[port]           = 3306
+        default[username]       = 'rootx'
+        default[password]       = ''
+        
+        aaa[hostname]           = 'xx.x.x';
+        aaa[port]                       = 3306
+        aaa[username]           = 'rootx'
+        aaa[password]           = ''
+        
 # env.config
 #
 #
 <?php
-	return	[
-				'mysql' => 	[
-								'default' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # default mysql connection string 
-								'aaaaaaa' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # another ...							
-								'nnnnnnn' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # another ...
-							]
-			];
+        return  [
+			'mysql' =>      [
+						'default' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # default mysql connection string 
+						'aaaaaaa' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # another ...                                                   
+						'nnnnnnn' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # another ...
+					]
+                ];
 
-			
-# env.json 			
+                        
+# env.json                      
 #
 #
 {
-	"mysql" :
-	{
-		"default" :	
-		{
-			"hostname" 	: "x.x.x",
-			"port"		: 3306,
-			"username"	: "",
-			"password"	: "" 
-		}
-		,
-		"aaa" :	
-		{
-			"hostname" 	: "x.x.x",
-			"port"		: 3306,
-			"username"	: "",
-			"password"	: "" 
-		}
-	}
+        "mysql" :
+        {
+                "default" :     
+                {
+                        "hostname"      : "x.x.x",
+                        "port"          : 3306,
+                        "username"      : "",
+                        "password"      : "" 
+                }
+                ,
+                "aaa" : 
+                {
+                        "hostname"      : "x.x.x",
+                        "port"          : 3306,
+                        "username"      : "",
+                        "password"      : "" 
+                }
+        }
+        ,
+        "redis":
+        {
+                "default":
+                {
+                        "scheme"        : "tcp",
+                        "host"          : "x.x.x.x",
+                        "port"          : 6379,
+                        "password"      : "xxx",
+                        "database"      : 0
+                }
+        }
 }
