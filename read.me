@@ -5,6 +5,8 @@
  email                  : lch1025@qq.com
  description            : HX project library has been released with Beta 1.0. library includes several features such as database Redis routing and JSON tools. I designed the core functionality of this library to use chainable objects with fluent native syntax so you can start using immediately via PHP Composer.
 
+SUMMARY
+
 I. Core Innovation: Reconstructing the Service Invocation Paradigm with "Programmable Dynamic Properties"
 
 Traditional PHP frameworks rely on dependency injection containers as the central mechanism for service assembly, with configurations typically solidified during the application bootstrap phase. This architecture, however, deeply integrates service resolution with property access through the ingenious ado and ado_inject methods within c_base_class. ado_inject is particularly revolutionary: when a property already exists, it does not merely overwrite it. Instead, it creates an entirely new, isolated instance for resolution via $this->new()->ado($k, $v, $k)->$k. This essentially constructs an "atomic resolution sandbox," ensuring that the process of generating a new value remains uncontaminated by the current object's state, while fully reusing the resolution logic. This grants the architecture the ability to dynamically replace service implementations at any point during runtime—whether for testing mocks, feature toggles, or hot upgrades—all achievable with a single line of code, eliminating the need for container rebuilds or complex service provider overrides. It represents a creative exploitation of PHP's magic method capabilities, elevating property access from passive storage to a unified entry point for active computation and dynamic assembly.
