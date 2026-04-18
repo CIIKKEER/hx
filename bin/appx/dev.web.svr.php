@@ -1,15 +1,14 @@
 <?php
-require_once __DIR__.'/../auto.load.php';
+require_once __DIR__ . '/../auto.load.php';
 
 use hx\c_base_class;
 use hx\cli\c_cli;
-
 
 class c_dev_web_svr extends c_base_class
 {
 	public const version = '1.0.0';
 	public const server = 'PHP built-in web server';
-	private c_cli $cli;
+	private ?c_cli $cli = null;
 
 	public function __construct ()
 	{
@@ -32,7 +31,7 @@ class c_dev_web_svr extends c_base_class
 	public function main (int $argc , array $argv): int
 	{
 		$this->cli->parse($argv);
-		$this->parse_option();
+		$this->parse_option($argc);
 
 		return 0;
 	}
@@ -61,17 +60,19 @@ class c_dev_web_svr extends c_base_class
 										->echo();
 		return $this;
 	}
-	private function parse_option (): self
+	private function parse_option (int$argc): self
 	{
+		
 		/* set the option to default value
 		 * 
 		 */
 		$this->parse_option_and_set_default_value();
 		
+		
 		/* on help
 		 * 
 		 */
-		if 	($this->cli->get_options()->exist('help') || $this->cli->get_options()->exist('h') || $this->cli->get_arg()->to_array()->search('help')->ok() || $this->cli->get_arg()->to_array()->search('h')->ok())
+		if 	(1 == $argc || $this->cli->get_options()->exist('help') || $this->cli->get_options()->exist('h') || $this->cli->get_arg()->to_array()->search('help')->ok() || $this->cli->get_arg()->to_array()->search('h')->ok())
 		{
 			return $this->on_help();
 		}

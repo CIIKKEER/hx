@@ -13,6 +13,7 @@ use hx\fun\debug\c_console_color;
 use hx\fun\cipher\c_cipher;
 use hx\fun\time\c_time;
 use hx\fun\time\c_hrtime;
+use hx\fun\jwt\c_jwt;
 
 /**
  * @property c_debug 			$debug
@@ -23,7 +24,7 @@ use hx\fun\time\c_hrtime;
  * @property c_console_color	$cc
  * @property c_cipher			$cipher
  * @property c_time				$time
- *
+ * @property c_jwt				$jwt
  *
  *
  */
@@ -41,6 +42,7 @@ class c_fun extends c_base_class
 					->ado('cc'			, c_console_color::class	, $k)
 					->ado('cipher'		, c_cipher::class			, $k)
 					->ado('time'		, c_time::class				, $k)
+					->ado('jwt'			, c_jwt::class				, $k)
 					->$k;
 		/* > */
 	}

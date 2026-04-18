@@ -10,7 +10,7 @@ class c_cli extends c_base_class
 	private array $argv_raw_to_array;
 	private c_stdclass $arg;
 	private c_stdclass $option;
-	private string $cmd_line_raw_path;
+	private ?string $cmd_line_raw_path = null;
 	private string $os;
 
 	public function __construct ()

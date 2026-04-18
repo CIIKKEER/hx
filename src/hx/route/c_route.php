@@ -7,13 +7,16 @@ use hx\fun\stdclass\c_stdclass;
 interface i_route_action
 {
 
-	public function add (string $route_url , mixed $action): self;
-}
+	public function add (string $route_url , callable|array $action): self;
 
-interface i_route_url
-{
+	/**
+	 * 
+	 * @param 	array $kv
+	 * @return 	self
+	 */
+	public function add_with_array (array $kv): self;
 
-	public function add (string $k , mixed $action): self;
+	public function add_with_invoke (string $route_url , i_route_action_with_invoke $i): self;
 }
 
 interface i_response
@@ -238,7 +241,7 @@ class c_route extends c_base_class implements i_route_action
 	 * @throws \Exception
 	 * 
 	 */
-	public function add (string $route_url , mixed $action): self
+	public function add (string $route_url , callable|array $action): self
 	{
 		if (is_array($action) && count($action) === 2)
 		{
@@ -273,9 +276,35 @@ class c_route extends c_base_class implements i_route_action
 		(new c_route_url($this))->add($route_url,$action);
 		return $this;
 	}
+
+	public function add_with_array (array $kv): self
+	{
+		foreach ($kv as $k => $v)
+		{
+			if (is_a($v,i_route_action_with_invoke::class))
+			{
+				$this->add_with_invoke($k,$v);
+			}
+			else
+			{
+				$this->add($k,$v);
+			}
+		}
+		return $this;
+	}
+
+	public function add_with_invoke (string $route_url , i_route_action_with_invoke $i): self
+	{
+		$this->add($route_url,function (i_request $r , i_response $s) use ( $i)
+		{
+			return $i->on_invoke($r,$s);
+		});
+
+		return $this;
+	}
 }
 
-class c_route_url extends c_base_class implements i_route_url
+class c_route_url extends c_base_class
 {
 	private c_route $c_route;
 
