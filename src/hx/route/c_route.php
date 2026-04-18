@@ -347,7 +347,6 @@ class c_response extends c_base_class implements i_response
 			}
 			catch (\Throwable $e)
 			{
-				print_r($e);
 				$r = $this->error($this->c_route->c_request->url_route(),'an error occurred during the internal call of the URL route action : ' . $e->getMessage(),880006);
 			}
 			finally 
