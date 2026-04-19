@@ -19,6 +19,7 @@ class route extends c_base_class
 					'/user/register' 	=> n_test::new()->user()->register(...)		,
 					'/user/info'		=> n_test::new()->user()->info()			,
 					'/user/modify'		=> n_test::new()->user()->modify()			,
+					'/hx/about'			=> n_test::new()->hx()->about(...)			,
 				];
 	}
 }

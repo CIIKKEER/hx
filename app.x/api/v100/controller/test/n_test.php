@@ -14,6 +14,18 @@ use appx\api\v100\model\aaa;
 class n_test extends c_controller
 {
 
+	public function hx ()
+	{
+		return new class() extends c_controller
+		{
+
+			public function about (i_request $r , i_response $s)
+			{
+				return $s->success(gf()->version->about());
+			}
+		};
+	}
+
 	public function user ()
 	{
 		return new class() extends c_controller
@@ -79,7 +91,7 @@ class n_test extends c_controller
 
 					public function on_invoke (i_request $r , i_response $s)
 					{
-						return $s->success([m_test::new()->about(),aaa::new()->about()]);
+						return $s->success([ m_test::new()->about(),aaa::new()->about()]);
 					}
 				};
 			}

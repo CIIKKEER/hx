@@ -12,6 +12,7 @@ use hx\cache\c_cache;
 use hx\cli\c_cli;
 use hx\os\c_os;
 use hx\route\c_route;
+use hx\fun\stdclass\c_stdclass;
 
 /**
  * @author 		Administrator
@@ -57,6 +58,11 @@ class c_version extends c_base_class
 	const email = 'lch1025@qq.com';
 	const license = 'Apache License';
 	const description = 'ciikkeer/hx => php helper library';
+
+	public function about (): c_stdclass
+	{
+		return gf()->fun->stdclass->new_with_array((new \ReflectionClass($this))->getConstants());
+	}
 }
 
 
