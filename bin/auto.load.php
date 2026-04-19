@@ -1,15 +1,23 @@
 <?php
+
 /* < auto load vendor
  * 
  */
-$autoload_path = null;for ($dir = __DIR__ ; $dir !== dirname($dir) ; $dir = dirname($dir))
+function auto_load_vendor () :string
 {
-	$va = $dir . '/vendor/autoload.php';if (file_exists($va))
+	static $autoload_path = null;if($autoload_path===NULL)
 	{
-		$autoload_path = $va;
-		break;
+		for ($dir = __DIR__ ; $dir !== dirname($dir) ; $dir = dirname($dir))
+		{
+			$va = $dir . '/vendor/autoload.php';if (file_exists($va))
+			{
+				$autoload_path = $va;
+				break;
+			}
+		}
 	}
+	return $autoload_path;
 }
-
-require_once $autoload_path;
 /* > */
+
+require_once (auto_load_vendor());
