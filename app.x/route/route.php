@@ -2,7 +2,7 @@
 namespace appx\route;
 
 use hx\c_base_class;
-use appx\controller\test\test;
+use appx\api\v100\controller\test\n_test;
 
 /* <
  * 
@@ -13,11 +13,12 @@ class route extends c_base_class
 	public function get (): array
 	{
 		return [ 
-					'/user/del' 		=> test::new()->user()->del(...)		,
-					'/user/add' 		=> test::new()->user()->add()			,
-					'/user/login'		=> [test::new()->user()::class,'login']	,
-					'/user/register' 	=> test::new()->user()->register(...)	,
-					'/user/info'		=> test::new()->user()->info()			,
+					'/user/del' 		=> n_test::new()->user()->del(...)			,
+					'/user/add' 		=> n_test::new()->user()->add()				,
+					'/user/login'		=> [n_test::new()->user()::class,'login']	,
+					'/user/register' 	=> n_test::new()->user()->register(...)		,
+					'/user/info'		=> n_test::new()->user()->info()			,
+					'/user/modify'		=> n_test::new()->user()->modify()			,
 				];
 	}
 }

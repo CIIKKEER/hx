@@ -43,12 +43,18 @@ class c_mysql_connection_info extends c_base_class implements i_mysql_connection
 		return $this->m_password;
 	}
 
+	public function database (): string
+	{
+		return $this->database;
+	}
+
 	private function get_mysql_with_key ($key = 'default')
 	{
 		/* < */
 		$o 				= $this->new();
 		$o->m_ip 		= $this->m_mysql_connection_info->{$key}->hostname;
 		$o->m_port 		= $this->m_mysql_connection_info->{$key}->port;
+		$o->database 	= $this->m_mysql_connection_info->{$key}->database;
 		$o->m_user 		= $this->m_mysql_connection_info->{$key}->username;
 		$o->m_password 	= $this->m_mysql_connection_info->{$key}->password;
 		/* > */

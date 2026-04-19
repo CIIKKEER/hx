@@ -16,19 +16,24 @@ interface i_query_status
 interface i_bindx
 {
 
-	public function ai (int $i): i_bindx;
+	public function ai (int $i): self;
 
-	public function aia (array $ia): i_bindx;
+	public function aia (array $ia): self;
 
-	public function as (string $s): i_bindx;
+	public function as (string $s): self;
 
-	public function asa (array $sa): i_bindx;
+	public function asa (array $sa): self;
 
-	public function ad (float $d): i_bindx;
+	public function ad (float $d): self;
 
-	public function ada (array $da): i_bindx;
+	public function ada (array $da): self;
 
-	public function go (): i_query;
+	/**
+	 * 
+	 * @param 	callable $on_go
+	 * @return 	i_query
+	 */
+	public function go (callable $on_go = null): i_query;
 }
 
 interface i_query extends i_query_status
@@ -46,8 +51,6 @@ interface i_query extends i_query_status
 	public function get_single_row (): c_stdclass;
 
 	public function get_single_value (): mixed;
-
- 
 }
 
 interface i_trans

@@ -16,7 +16,7 @@ abstract class c_base_class extends \stdClass
 	 * 
 	 * @var \hx\fun\stdclass\c_stdclass $dc
 	 */
-	private ?c_stdclass $dc = null;
+	protected ?c_stdclass $dc = null;
 
 	public static function new ()
 	{

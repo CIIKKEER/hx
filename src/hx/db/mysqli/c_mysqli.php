@@ -69,9 +69,12 @@ class c_mysqli extends c_base_class implements i_db
 	{
 		$this->m_mysqli = new \mysqli();
 
+		# mysqli::connect(?string $hostname=null, ?string $username=null, ?string $password=null, ?string $database=null, ?int $port=null, ?string $socket=null) : bool
+		#
+		#
 		try
 		{
-			$this->m_mysqli->connect($conn->ip(),$conn->user(),$conn->password(),null,$conn->port());
+			$this->m_mysqli->connect($conn->ip(),$conn->user(),$conn->password(),$conn->database(),$conn->port());
 		}
 		catch (\mysqli_sql_exception $e)
 		{
@@ -87,15 +90,20 @@ class c_mysqli extends c_base_class implements i_db
 	{
 		$db = $this->new()->open($this->m_mysql_connection_info->$connection_key);return new c_trans($db->make_weak_reference());
 	}
+	
 	public function get_db_information (string $connection_key = 'default'): c_stdclass
 	{
 		$db = $this->new()->open($this->m_mysql_connection_info->$connection_key);
-		$db->dc()->server_info = $db->m_mysqli->get_server_info();
-		$db->dc()->host_info = $db->m_mysqli->host_info;
-		return $db->dc();
+		$db->dc()->db->server_info = $db->m_mysqli->get_server_info();
+		$db->dc()->db->host_info = $db->m_mysqli->host_info;
+		
+		return $db->dc()->db;
 	}
-
 	/* > */
+	public function get_connection_info (): c_mysql_connection_info
+	{
+		return $this->m_mysql_connection_info;
+	}
 }
 
 class c_trans extends c_base_class implements i_trans
@@ -185,11 +193,15 @@ class c_bind_parameter extends c_base_class implements i_bindx
 		$this->index 				= 0;
 	}
 	/* > */
-	public function go (): i_query
+	public function go (callable $on_go = null): i_query
 	{
 		try
 		{
 			/* < prepare to bind parameter */$this->trim_sql_comment_as_empty()->create_parameter_place_holder();$this->stmt = $this->mysqli->prepare($this->sqlx);$this->create_parameter_binding();/* > */
+			if ($on_go !== null)
+			{
+				$on_go("\n" . $this->get_sql_debug());
+			}
 		}
 		catch (\Exception $e)
 		{
@@ -240,10 +252,10 @@ class c_bind_parameter extends c_base_class implements i_bindx
 		gf()->fun->debug->echo_with_nl($err)->echo_with_nl($this->get_sql_debug())->die;
 	}
 
-	private function get_sql_debug (): string
+	public function get_sql_debug (): string
 	{
 		/* < */
-		return gf()->fun->debug->cc->yellow('DEBUG.')->red("SQL   : ")->cyan('RAW \ '	)->anl()->as('                   ')->as( $this->sql_raw)
+		return gf()->fun->debug->cc->new()->yellow('DEBUG.')->red("SQL   : ")->cyan('RAW \ '	)->anl()->as('                   ')->as( $this->sql_raw)
 										  ->anl()->yellow('DEBUG.')->red("SQL   : ")->pink('TRI \ '	)->anl()->as('                   ')->as( $this->sql)
 										  ->anl()->yellow('DEBUG.')->red("SQL   : ")->green('EXT \ '	)->anl()->as('                   ')->as( $this->sqlx)
 										  ->get();
@@ -393,7 +405,7 @@ class c_bind_parameter extends c_base_class implements i_bindx
 	}
 }
 
-class c_query extends c_base_class implements i_query  
+class c_query extends c_base_class implements i_query
 {
 	private c_bind_parameter $bp;
 	private c_stdclass $data;
