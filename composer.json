@@ -1,8 +1,7 @@
 {
 	"autoload" : {
 		"psr-4" : {
-			"hx\\" : "src/hx",
-			"appx\\" : "app.x"
+			"hx\\" : "src/hx"
 		},
 		"files" : [
 			"src/hx/gf.php"
