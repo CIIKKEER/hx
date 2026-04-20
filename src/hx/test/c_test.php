@@ -8,6 +8,32 @@ use hx\db\i_trans;
 use hx\cache\redis\i_redis_connect;
 use hx\cache\redis\i_redis_type;
 use hx\cache\redis\c_redis;
+use hx\db\orm\c_orm;
+use hx\db\i_bindx;
+
+class aaa extends c_orm
+{
+
+	protected function on_set_database_name (): string
+	{
+		return '';
+	}
+
+	protected function on_set_connnection_key (): string
+	{
+		return '';
+	}
+
+	protected function on_set_open_with_env_json (): string
+	{
+		return gf()->fun->file->realpath(__DIR__ . '/../../../env/env.json');
+	}
+
+	protected function on_db_driver (): i_db
+	{
+		return gf()->db->mysqli->new();
+	}
+}
 
 class c_test extends c_base_class
 {
@@ -19,14 +45,39 @@ class c_test extends c_base_class
 	public function go (): c_test
 	{
 		$this->on_test_cc();
+
+		$this->on_test_db_orm();
+		die();
 		$this->on_test_db();
 		die();
-
 		$this->on_test_route();
 		die();
 		$this->on_test_time();
 		die();
 		$this->on_test_redis();
+		return $this;
+	}
+
+	private function on_test_db_orm (): self
+	{
+		$aaa = aaa::new();
+		/** <
+		 *
+		 * @var i_db $db
+		 *
+		 */
+			
+		
+		
+		gf()->fun->debug->print_r
+		(
+			$aaa->select()->go()->get_single_row()
+			
+			
+		);
+		
+		/* > */
+
 		return $this;
 	}
 
@@ -156,7 +207,7 @@ class c_test extends c_base_class
 			
 		});
 		
-		$this->ado_inject('ccc', new class{public function about(){gf()->fun->debug->print_r('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.reject');}});
+		$this->ado_inject('ccc', new class{public function about(){gf()->fun->debug->print_r('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.ado.inject');}});
 		$this->ccc->about();
 		
 		die('ok');

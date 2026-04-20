@@ -16,7 +16,7 @@ abstract class c_base_class extends \stdClass
 	 * 
 	 * @var \hx\fun\stdclass\c_stdclass $dc
 	 */
-	protected ?c_stdclass $dc = null;
+	private ?c_stdclass $dc = null;
 
 	public static function new ()
 	{
@@ -66,7 +66,6 @@ abstract class c_base_class extends \stdClass
 		 */
 		return $this->dc === null ? (function () {$this->dc = gf()->fun->stdclass->new();return $this->dc;})() : $this->dc;
 		/* > */
-		
 	}
 
 	/**
