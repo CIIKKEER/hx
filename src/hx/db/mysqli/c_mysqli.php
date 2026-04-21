@@ -254,10 +254,13 @@ class c_bind_parameter extends c_base_class implements i_bindx
 
 	public function get_sql_debug (): string
 	{
+		$ext = is_array($this->bind_parameter->value) ? vsprintf(str_replace('?','%s',$this->sqlx),$this->bind_parameter->value) : $this->sqlx;
+				
+
 		/* < */
 		return gf()->fun->debug->cc->new()->yellow('DEBUG.')->red("SQL   : ")->cyan('RAW \ '	)->anl()->as('                   ')->as( $this->sql_raw)
 										  ->anl()->yellow('DEBUG.')->red("SQL   : ")->pink('TRI \ '	)->anl()->as('                   ')->as( $this->sql)
-										  ->anl()->yellow('DEBUG.')->red("SQL   : ")->green('EXT \ '	)->anl()->as('                   ')->as( $this->sqlx)
+										  ->anl()->yellow('DEBUG.')->red("SQL   : ")->green('EXT \ '	)->anl()->as('                   ')->as( $ext)
 										  ->get();
 		/* > */
 	}

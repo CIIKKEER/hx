@@ -24,31 +24,8 @@ class c_config extends c_base_class
 
 class c_config_mysql
 {
+	private static ?string $mysql_config_env_file_path = null;
 
-	// $ar =>	[
-	//			'mysql' => 	[
-	//							'default' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # default mysql connection string 
-	//							'aaaaaaa' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # another ...
-	//							.
-	//							.
-	//							.
-	//							.
-	//							.
-	//							.
-	//							.
-	//							.
-	//							'nnnnnnn' => ['hostname' => '','port' => 3306,'username' => '','password'=>''], # another ...
-	//						]
-	//			]
-	/**
-	 * @desc	obtain MySQL connection configuration information => you can use an array format in your code or save this configuration information to a local environment file.
-	 * 
-	 * @param 	array $ar
-	 * @return 	c_mysql_connection_info
-	 * 
-	 * 
-	 * 
-	 */
 	public function get_with_array (array $ar): c_mysql_connection_info
 	{
 		return (new c_mysql_connection_info())->set_mysql_connection_info(gf()->fun->stdclass->new_with_array($ar));
@@ -56,16 +33,36 @@ class c_config_mysql
 
 	public function get_with_env_json ($file): c_mysql_connection_info
 	{
-		$data = gf()->fun->stdclass->new(); /* < */gf()->fun->file->ini->open_with_json($file)->to_array()->on_empty( function()
+		/* < 
+		 * 
+		 */
+		self::$mysql_config_env_file_path = $file;$data = gf()->fun->stdclass->new();gf()->fun->file->ini->open_with_json($file)->to_array()->on_empty( function()
 		{
-			return gf()->exception->throw('1000000','parse enviorment json configuration file failed');
+			self::$mysql_config_env_file_path = null;
+			return gf()->exception->throw('1000000','i failed to parse the environment JSON configuration file');
 		})
-		->on_ok ( function ($ar) use($data)		
+		->on_ok ( function ($ar) use ($data)		
 		{
 			$data->mysql_connection_info = $ar;
-		});/* > */
+		});
+		/* > */
 
 		return $this->get_with_array($data->mysql_connection_info);
+	}
+
+	/**
+	 * 
+	 * @return 	string
+	 * @throws	\Exception
+	 */
+	public function get_mysql_config_env_file_path (): string
+	{
+		if (self::$mysql_config_env_file_path===NULL) 
+		{
+			gf()->exception->throw(1000001, 'the MySQL configuration environment JSON file path does not exist and must be set before use');
+			;
+		}
+		return self::$mysql_config_env_file_path;
 	}
 }
 

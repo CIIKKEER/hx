@@ -14,11 +14,6 @@ use hx\db\i_bindx;
 class aaa extends c_orm
 {
 
-	protected function on_set_database_name (): string
-	{
-		return '';
-	}
-
 	protected function on_set_connnection_key (): string
 	{
 		return '';
@@ -26,12 +21,29 @@ class aaa extends c_orm
 
 	protected function on_set_open_with_env_json (): string
 	{
-		return gf()->fun->file->realpath(__DIR__ . '/../../../env/env.json');
+		try
+		{
+			return gf()->config->mysql->get_mysql_config_env_file_path();
+		}
+		catch (\Exception $e)
+		{
+			return gf()->fun->file->realpath(__DIR__ . '/../../../env/env.json');
+		}
 	}
 
 	protected function on_db_driver (): i_db
 	{
 		return gf()->db->mysqli->new();
+	}
+
+	public function get_aaa_name_by_id (int $id): string
+	{
+		return $this->field('name')
+			->where()
+			->and('id',1)
+			->select()
+			->go()
+			->get_single_value();
 	}
 }
 
@@ -61,21 +73,23 @@ class c_test extends c_base_class
 	private function on_test_db_orm (): self
 	{
 		$aaa = aaa::new();
+
 		/** <
 		 *
 		 * @var i_db $db
 		 *
 		 */
-			
-		
-		
 		gf()->fun->debug->print_r
 		(
-			$aaa->select()->go()->get_single_row()
+			$aaa->field('id')->where()->and("'aaaaaaaaaaaa'",'?')->and(0, 0)->and('id', '>',0)->or("?", 100)->and(1, 'in',"(?)")->select()->as('aaaaaaaaaaaa')->ai(100)->aia([1,2,3])->go()->get_single_row()
+			,$aaa->field('id')->where()->and("'aaaaaaaaaaaa'",'?')->and(0, 0)->and('id', '>',0)->or("?", 100)->and(1, 'in',"(?)")->select()->as('aaaaaaaaaaaa')->ai(100)->aia([1,2,3])->go()->get_single_row()
+			,$aaa->field()->from("aaa left join bbb on aaa.id=bbb.id")->select()->go()->get_single_row()
+			,$aaa->get_aaa_name_by_id(1)
+			,gf()->config->mysql->get_mysql_config_env_file_path()
+			,$aaa->field()->from('aaa as a')->join()->left('bbb as b')->on('a.id', 'b.id')->select()->go()->get_single_row()
 			
 			
 		);
-		
 		/* > */
 
 		return $this;

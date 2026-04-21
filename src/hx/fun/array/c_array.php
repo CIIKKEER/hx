@@ -7,7 +7,7 @@ use hx\i_ok_error;
 
 class c_array extends c_base_class
 {
-	private array $m_ar;
+	private ?array $m_ar = null;
 
 	public function __destruct ()
 	{
@@ -16,17 +16,18 @@ class c_array extends c_base_class
 
 	public function empty (): bool
 	{
-		return count($this->m_ar) === 0 ? TRUE : FALSE;
+		return count($this->get()) === 0 ? TRUE : FALSE;
 	}
 
 	public function count (): int
 
 	{
-		return count($this->m_ar);
+		return count($this->get());
 	}
 
-	public function get (): array
+	public function &get (): array
 	{
+		$this->m_ar ??= [ ];
 		return $this->m_ar;
 	}
 
@@ -37,7 +38,7 @@ class c_array extends c_base_class
 
 	public function for_each (callable $on_for_each): c_array
 	{
-		foreach ($this->m_ar as $k => $v)
+		foreach ($this->get() as $k => $v)
 		{
 			$on_for_each($k,$v);
 		}
@@ -56,9 +57,15 @@ class c_array extends c_base_class
 		return $o;
 	}
 
+	public function append_with_array (array $ar): self
+	{
+		$this->m_ar = array_merge($this->get(),$ar);
+		return $this;
+	}
+
 	public function on_ok (callable $on_ok): c_array
 	{
-		$this->empty() === FALSE ? $on_ok($this->m_ar) : null;
+		$this->empty() === FALSE ? $on_ok($this->get()) : null;
 		return $this;
 	}
 
@@ -82,7 +89,25 @@ class c_array extends c_base_class
 
 	public function shift ()
 	{
-		$ar = array_shift($this->m_ar);
+		$ar = array_shift($this->get());
 		return $ar;
+	}
+
+	public function push (...$v): self
+	{
+		$this->m_ar = array_merge($this->get(),is_array($v) ? $v : [ $v]);
+		return $this;
+	}
+
+	public function implode ($separator = '')
+	{
+		return implode($separator,$this->get());
+	}
+
+	public function free (): self
+	{
+		unset($this->m_ar);
+		$this->m_ar = [ ];
+		return $this;
 	}
 }
