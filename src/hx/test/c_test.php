@@ -21,14 +21,7 @@ class aaa extends c_orm
 
 	protected function on_set_open_with_env_json (): string
 	{
-		try
-		{
-			return gf()->config->mysql->get_mysql_config_env_file_path();
-		}
-		catch (\Exception $e)
-		{
-			return gf()->fun->file->realpath(__DIR__ . '/../../../env/env.json');
-		}
+		return (__DIR__ . '/../../../env/env.json');
 	}
 
 	protected function on_db_driver (): i_db
@@ -41,6 +34,10 @@ class aaa extends c_orm
 		return $this->field('name')
 			->where()
 			->and('id',1)
+			->order()
+			->desc('id')
+			->asc('name')
+			->by()
 			->select()
 			->go()
 			->get_single_value();
@@ -79,17 +76,26 @@ class c_test extends c_base_class
 		 * @var i_db $db
 		 *
 		 */
-		gf()->fun->debug->print_r
-		(
-			$aaa->field('id')->where()->and("'aaaaaaaaaaaa'",'?')->and(0, 0)->and('id', '>',0)->or("?", 100)->and(1, 'in',"(?)")->select()->as('aaaaaaaaaaaa')->ai(100)->aia([1,2,3])->go()->get_single_row()
-			,$aaa->field('id')->where()->and("'aaaaaaaaaaaa'",'?')->and(0, 0)->and('id', '>',0)->or("?", 100)->and(1, 'in',"(?)")->select()->as('aaaaaaaaaaaa')->ai(100)->aia([1,2,3])->go()->get_single_row()
-			,$aaa->field()->from("aaa left join bbb on aaa.id=bbb.id")->select()->go()->get_single_row()
-			,$aaa->get_aaa_name_by_id(1)
-			,gf()->config->mysql->get_mysql_config_env_file_path()
-			,$aaa->field()->from('aaa as a')->join()->left('bbb as b')->on('a.id', 'b.id')->select()->go()->get_single_row()
-			
-			
-		);
+		try 
+		{
+			gf()->fun->debug->print_r(
+
+				// 			$aaa->field('id')->where()->and("'aaaaaaaaaaaa'",'?')->and(0, 0)->and('id', '>',0)->or("?", 100)->and(1, 'in',"(?)")->select()->as('aaaaaaaaaaaa')->ai(100)->aia([1,2,3])->go()->get_single_row()
+				// 			,$aaa->field('id')->where()->and("'aaaaaaaaaaaa'",'?')->and(0, 0)->and('id', '>',0)->or("?", 100)->and(1, 'in',"(?)")->select()->as('aaaaaaaaaaaa')->ai(100)->aia([1,2,3])->go()->get_single_row()
+				// 			,$aaa->field()->from("aaa left join bbb on aaa.id=bbb.id")->select()->go()->get_single_row()
+				// 			,$aaa->get_aaa_name_by_id(1)
+				// 			,gf()->config->mysql->get_mysql_config_env_file_path()
+				// 			,$aaa->field()->from('aaa as a')->join()->left('bbb as b')->on('a.id', 'b.id')->order()->asc('a.id')->by()->select()->go()->get_single_row()
+				// 			,$aaa->field()->order()->asc('id')->desc('name')->by()->select()->go()->get_single_row()
+				// 			,$aaa->order_by("id desc","name asc")->select()->go()->get_single_row()
+				$aaa->insert([ 'name' => 'jack','age' => 11,'id' => 1])->get_insert_id()
+			);
+		}
+		catch (\Throwable $e)
+		{
+			die($e->getMessage());
+		}
+
 		/* > */
 
 		return $this;

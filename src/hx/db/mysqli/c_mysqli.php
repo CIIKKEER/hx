@@ -62,8 +62,9 @@ class c_mysqli extends c_base_class implements i_db
 
 	/**
 	 * 
-	 * @param \hx\db\mysqli\c_mysql_connection_info $conn
-	 * @return c_mysqli
+	 * @param 	c_mysql_connection_info $conn
+	 * @return 	c_mysqli
+	 * @throws	\Exception
 	 */
 	private function open (c_mysql_connection_info $conn): c_mysqli
 	{
@@ -76,9 +77,10 @@ class c_mysqli extends c_base_class implements i_db
 		{
 			$this->m_mysqli->connect($conn->ip(),$conn->user(),$conn->password(),$conn->database(),$conn->port());
 		}
-		catch (\mysqli_sql_exception $e)
+		catch (\Throwable $e)
 		{
-			gf()->fun->debug->die($e->getMessage());
+			$this->m_mysqli = null;
+			gf()->exception->throw_with_wrap(1000002,$e);
 		}
 		return $this;
 	}
@@ -120,15 +122,22 @@ class c_trans extends c_base_class implements i_trans
 	 */
 	public function auto (callable $on_transaction): i_trans
 	{
+		$ex = null;
 		try 
 		{
 			$this->begin();$ok = $on_transaction($this);
 		}
-		catch (\Throwable  $e)
+		catch (\Throwable $e)
 		{
 			$ok = false;
+			$ex = $e;
 		}
-		in_array($ok,[null,true],TRUE) ? $this->commit() : $this->rollback();
+		
+		in_array ($ok,[null,true],TRUE) ? $this->commit() : $this->rollback();if($ex !== null)
+		{
+			gf()->exception->throw_with_wrap(1000007, $ex);
+		}
+		
 		return $this;
 	}
 	/* > */
@@ -193,6 +202,15 @@ class c_bind_parameter extends c_base_class implements i_bindx
 		$this->index 				= 0;
 	}
 	/* > */
+
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see 			\hx\db\i_bindx::go()
+	 *  
+	 * 
+	 * 
+	 */
 	public function go (callable $on_go = null): i_query
 	{
 		try
@@ -202,13 +220,13 @@ class c_bind_parameter extends c_base_class implements i_bindx
 			{
 				$on_go("\n" . $this->get_sql_debug());
 			}
-		}
-		catch (\Exception $e)
-		{
-			$this->on_error($e->getMessage());
-		}
 
-		return new c_query($this->make_weak_reference());
+			return new c_query($this->make_weak_reference());
+		}
+		catch (\Throwable $e)
+		{
+			gf()->exception->throw(1000006,$e->getMessage() . "\n" . $this->get_sql_debug() . "\n");
+		}
 	}
 
 	public function ai (int $i): i_bindx
@@ -249,13 +267,12 @@ class c_bind_parameter extends c_base_class implements i_bindx
 
 	private function on_error (string $err)
 	{
-		gf()->fun->debug->echo_with_nl($err)->echo_with_nl($this->get_sql_debug())->die;
+		gf()->fun->debug->echo_with_nl($err)->echo_with_nl($this->get_sql_debug());
 	}
 
 	public function get_sql_debug (): string
 	{
 		$ext = is_array($this->bind_parameter->value) ? vsprintf(str_replace('?','%s',$this->sqlx),$this->bind_parameter->value) : $this->sqlx;
-				
 
 		/* < */
 		return gf()->fun->debug->cc->new()->yellow('DEBUG.')->red("SQL   : ")->cyan('RAW \ '	)->anl()->as('                   ')->as( $this->sql_raw)
@@ -394,9 +411,6 @@ class c_bind_parameter extends c_base_class implements i_bindx
 
 	private function trim_sql_comment_as_empty (): c_bind_parameter
 	{
-		# $this->sql = preg_replace('/\/\*.*?\*\//','',$this->sql);
-		#
-		#
 		$this->sql = preg_replace('/\/\*.*?\*\/|--.*?(?:\n|$)|#.*?(?:\n|$)/s','',$this->sql);
 
 		return $this;
@@ -405,6 +419,16 @@ class c_bind_parameter extends c_base_class implements i_bindx
 	public function for_each (callable $on_for_each): i_query
 	{
 		return $this->go()->for_each($on_for_each);
+	}
+
+	public function ax (mixed $ax): self
+	{
+		match (gettype($ax)) {
+			"integer" => $this->ai($ax) ,
+			"double" => $this->ad($ax) ,
+			"string" => $this->as($ax) ,
+		};
+		return $this;
 	}
 }
 
@@ -435,13 +459,29 @@ class c_query extends c_base_class implements i_query
 	 * 
 	 *
 	 */ 
+	/**
+	 * 
+	 * @return c_query
+	 * @throws \Exception
+	 * 
+	 */
 	private function execute (): c_query
 	{
-		$this->bp->stmt->execute();$mr = $this->bp->stmt->get_result();if ($mr !== false)
+		try 
 		{
-			$this->mr = $mr;
-			$this->fetch_assoc();
+			$r = $this->bp->stmt->execute();
+			$mr = $this->bp->stmt->get_result();
+			if ($mr !== false)
+			{
+				$this->mr = $mr;
+				$this->fetch_assoc();
+			}
 		}
+		catch (\Throwable $e)
+		{
+			gf()->exception->throw_with_wrap(1000004, $e);
+		}
+		
 		return $this;
 	}
 	/* > */
@@ -473,10 +513,10 @@ class c_query extends c_base_class implements i_query
 		return $this;
 	}
 
-	public function getx ()
-	{
-		return $this->bp->mysqli;
-	}
+	// 	public function getx ()
+	// 	{
+	// 		return $this->bp->mysqli;
+	// 	}
 
 	/**
 	 * 
@@ -506,11 +546,11 @@ class c_query extends c_base_class implements i_query
 
 	public function get_affected_rows (): int
 	{
-		return $this->bp->mysqli->affected_rows;
+		return $this->bp->stmt->affected_rows;
 	}
 
 	public function get_insert_id (): int
 	{
-		return $this->bp->mysqli->insert_id;
+		return $this->bp->stmt->insert_id;
 	}
 }

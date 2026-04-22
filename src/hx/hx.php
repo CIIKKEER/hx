@@ -13,6 +13,8 @@ use hx\cli\c_cli;
 use hx\os\c_os;
 use hx\route\c_route;
 use hx\fun\stdclass\c_stdclass;
+use hx\reflection\c_reflection;
+use hx\reflection\i_reflection_property;
 
 /**
  * @author 		Administrator
@@ -26,7 +28,7 @@ use hx\fun\stdclass\c_stdclass;
  * @property	c_cli			$cli
  * @property	c_os			$os	
  * @property	c_route			$route
- *
+ * @property	c_reflection	$reflection
  *
  *
  */
@@ -45,6 +47,7 @@ class hx extends c_base_class
 					->ado('cli'			, c_cli::class														, $k)
 					->ado('os'			, c_os::class														, $k)
 					->ado('route'		, c_route::class													, $k)
+					->ado('reflection'	, c_reflection::class												, $k)
 					->ado('exception'	, function (){return (new c_exception())->set_exception_handler();}	, $k)
 					->$k;
 		/* > */
@@ -61,7 +64,10 @@ class c_version extends c_base_class
 
 	public function about (): c_stdclass
 	{
-		return gf()->fun->stdclass->new_with_array((new \ReflectionClass($this))->getConstants());
+		return gf()->fun->stdclass->new_with_array(gf()->reflection->class($this)
+			->getConstants());
+		
+		
 	}
 }
 

@@ -38,7 +38,6 @@ class c_config_mysql
 		 */
 		self::$mysql_config_env_file_path = $file;$data = gf()->fun->stdclass->new();gf()->fun->file->ini->open_with_json($file)->to_array()->on_empty( function()
 		{
-			self::$mysql_config_env_file_path = null;
 			return gf()->exception->throw('1000000','i failed to parse the environment JSON configuration file');
 		})
 		->on_ok ( function ($ar) use ($data)		
@@ -57,12 +56,23 @@ class c_config_mysql
 	 */
 	public function get_mysql_config_env_file_path (): string
 	{
-		if (self::$mysql_config_env_file_path===NULL) 
+		if (self::$mysql_config_env_file_path === NULL)
 		{
-			gf()->exception->throw(1000001, 'the MySQL configuration environment JSON file path does not exist and must be set before use');
-			;
+			gf()->exception->throw(1000003,'the MySQL configuration environment JSON file path does not exist and must be set before use');
 		}
+		
 		return self::$mysql_config_env_file_path;
+	}
+
+	/**
+	 * 
+	 * @param 	string $file_path
+	 * @return self
+	 */
+	public function set_mysql_config_env_file_path (string $file_path): self
+	{
+		self::$mysql_config_env_file_path = $file_path;
+		return $this;
 	}
 }
 

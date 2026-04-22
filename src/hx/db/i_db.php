@@ -28,10 +28,14 @@ interface i_bindx
 
 	public function ada (array $da): self;
 
+	public function ax (mixed $ax): self;
+
 	/**
 	 * 
 	 * @param 	callable $on_go
 	 * @return 	i_query
+	 * @throws	Exception
+	 * 
 	 */
 	public function go (callable $on_go = null): i_query;
 }
@@ -84,7 +88,6 @@ interface i_db
 	public function connect (string $connection_key = 'default'): i_trans;
 
 	public function get_db_information (string $connection_key = 'default'): c_stdclass;
-	
 }
 
  

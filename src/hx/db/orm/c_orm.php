@@ -8,6 +8,52 @@ use hx\db\i_bindx;
 use hx\db\mysqli\c_bind_parameter;
 use hx\db\i_query;
 use hx\fun\array\c_array;
+use hx\reflection\i_reflection_property;
+use hx\c_ok_error;
+use hx\db\i_query_status;
+
+class c_order_by extends c_base_class
+{
+	private c_orm $c_orm;
+	private i_reflection_property $order_by;
+
+	public function __construct (\WeakReference $w)
+	{
+		$this->c_orm = $w->get();
+		$this->order_by = gf()->reflection->property($this->c_orm,'order_by');
+	}
+
+	public function asc (string $order): self
+	{
+		if ($this->order_by->get()->count() === 0 && empty($order) === FALSE)
+		{
+			$this->order_by->get()->push(" order by " . $order . " asc");
+		}
+		else
+		{
+			$this->order_by->get()->push($order . ' asc');
+		}
+		return $this;
+	}
+
+	public function desc (string $order): self
+	{
+		if ($this->order_by->get()->count() === 0 && empty($order) === FALSE)
+		{
+			$this->order_by->get()->push(" order by " . $order . " desc");
+		}
+		else
+		{
+			$this->order_by->get()->push($order . ' desc');
+		}
+		return $this;
+	}
+
+	public function by (): c_orm
+	{
+		return $this->c_orm;
+	}
+}
 
 abstract class c_orm extends c_base_class
 {
@@ -18,12 +64,12 @@ abstract class c_orm extends c_base_class
 	private ?c_array $where = null;
 	private ?c_array $field = null;
 	private ?c_array $from = null;
-	private ?c_array $order_by = null;
 	private ?c_array $limit = null;
 	private ?c_array $group_by = null;
-	protected ?c_array $join = null;
 	private ?i_trans $it = null;
 	private ?i_db $db = null;
+	protected ?c_array $order_by = null;
+	protected ?c_array $join = null;
 
 	public function get_table_name (): string
 	{
@@ -33,6 +79,84 @@ abstract class c_orm extends c_base_class
 			$this->table_name = array_pop($ar);
 		}
 		return $this->database_name === null ? $this->table_name : $this->database_name . '.' . $this->table_name;
+	}
+
+	/**
+	 * 
+	 * @param 	array $insert
+	 * @return 	\hx\db\i_query
+	 * @throws	\Exception
+	 * 
+	 */
+	public function insert (array $insert): i_query
+	{
+		$this->ini_db_config();
+
+		/**
+		 * @var c_array $insert
+		 */
+		$insert = gf()->fun->array->new_with_array($insert);
+		if ($insert->count() === 0)
+		{
+			gf()->exception->throw(130000,'You will get an error when passing an empty array to the ORM insert method');
+		}
+
+		$this->dc()->sql->insert = "insert into " . $this->get_table_name() . "(";
+		$insert->for_each(function ($k , $v)
+		{
+			$this->dc()->sql->insert .= $k . ",";
+		});
+		$this->dc()->sql->insert = rtrim($this->dc()->sql->insert,',') . ") values (";
+		$insert->for_each(function ($k , $v)
+		{
+			$this->dc()->sql->insert .= '?,';
+		});
+		$this->dc()->sql->insert = rtrim($this->dc()->sql->insert,',') . ")";
+		$this->dc()->sql->insert_status = null;
+
+		$this->it->auto(function (i_trans $it) use ( $insert)
+		{
+			/**
+			 * @var i_bindx $bindx
+			 */
+			$bindx = $it->query($this->dc()->sql->insert);
+			$insert->for_each(function ($k , $v) use ( $it , $bindx)
+			{
+				$bindx->ax($v);
+			});
+
+			try
+			{
+				$this->dc()->sql->insert_status = $bindx->go();
+			}
+			catch (\Throwable $e)
+			{
+				gf()->exception->throw_with_wrap(130001, $e);
+			}
+		});
+
+		return $this->dc()->sql->insert_status;
+	}
+
+	public function get_order_by (): string
+	{
+		return $this->order_by->implode(',');
+	}
+
+	public function order_by (string ...$order_by): self
+	{
+		if ($this->ini_db_config()->order_by->count() === 0 && count($order_by) > 0)
+		{
+			$this->order_by->push(" order by " . array_shift($order_by));
+		}
+		$this->order_by->push(...$order_by);
+
+		return $this;
+	}
+
+	public function order (): c_order_by
+	{
+		return new c_order_by($this->ini_db_config()->make_weak_reference());
 	}
 
 	public function select (): i_bindx
@@ -45,6 +169,7 @@ abstract class c_orm extends c_base_class
 		$sql .= " " . $this->get_from();
 		$sql .= " " . $this->get_join();
 		$sql .= " " . $this->get_where();
+		$sql .= " " . $this->get_order_by();
 
 		$this->sql_free();
 
@@ -58,19 +183,16 @@ abstract class c_orm extends c_base_class
 
 	public function join ()
 	{
-		$this->ini_db_config();
-		return new class($this->make_weak_reference()) extends c_base_class
+		return new class($this->ini_db_config()->make_weak_reference()) extends c_base_class
 		{
 			private c_orm $c_orm;
-			private mixed $join;
+			private i_reflection_property $join;
 			private ?string $join_table = null;
 
 			public function __construct (\WeakReference $w)
 			{
 				$this->c_orm = $w->get();
-				$prop = new \ReflectionProperty($this->c_orm::class,'join');
-				$prop->setAccessible(TRUE);
-				$this->join = $prop->getValue(...);
+				$this->join = gf()->reflection->property($this->c_orm,'join');
 			}
 
 			public function left ($table)
@@ -81,8 +203,8 @@ abstract class c_orm extends c_base_class
 
 			public function on (string $ta , string $tb): c_orm
 			{
-				($this->join)($this->c_orm)->push('left join ',$this->join_table," on ",$ta,' = ',$tb);
-				unset($this->join);
+				$this->join->get()->push('left join ',$this->join_table," on ",$ta,' = ',$tb);
+
 				return $this->c_orm;
 			}
 		};
@@ -90,8 +212,7 @@ abstract class c_orm extends c_base_class
 
 	public function field (string ...$fields): self
 	{
-		$this->ini_db_config();
-		$this->field->push(...$fields);
+		$this->ini_db_config()->field->push(...$fields);
 
 		return $this;
 	}
@@ -148,6 +269,7 @@ abstract class c_orm extends c_base_class
 	private function where_and ($k , $x ,... $v ): self
 	{
 		$this->ini_db_config()->where->push($this->where_x()->kxv($k,$x,...$v)->and());
+		
 		return $this;
 	}
 	public function or ($k , $x , ...$v): self
@@ -175,8 +297,9 @@ abstract class c_orm extends c_base_class
 				{
 					$v = array_shift($v);
 				}
-				$this->kxv 		= array_map ( function ($a) { return trim($a);},[ $k,$x,$v ]);
-				$this->kxv[1]	= ' ' . $this->kxv[1] . ' ';
+				
+				$this->kxv 		= gf()->fun->array->new_with_array([ $k,$x,$v])->map(fn ($a) => trim($a))->get();
+				$this->kxv[1] 	= ' ' . $this->kxv[1] . ' ';
 
 				return $this;
 			}
@@ -192,64 +315,34 @@ abstract class c_orm extends c_base_class
 			}
 		};
 	}
+
 	/* >
 	 * <
 	 *  
 	 */
 	private function sql_free (): self
 	{
-		$this->field->free();$this->from->free();$this->where->free();$this->order_by->free();$this->limit->free();$this->group_by->free();$this->dc()->del('sql');
+		$this->join->free();$this->field->free();$this->from->free();$this->where->free();$this->order_by->free();$this->limit->free();$this->group_by->free();$this->dc()->del('sql');
 
+		return $this;
+	}
+	private function sql_ini (): self
+	{
+		$this->field 	??= gf()->fun->array->new();
+		$this->from 	??= gf()->fun->array->new();
+		$this->where 	??= gf()->fun->array->new();
+		$this->order_by ??= gf()->fun->array->new();
+		$this->limit 	??= gf()->fun->array->new();
+		$this->group_by ??= gf()->fun->array->new();
+		$this->join 	??= gf()->fun->array->new();
+		$this->order_by ??= gf()->fun->array->new();
+		
 		return $this;
 	}
 	/* > */
-	private function sql_ini (): self
-	{
-		if ($this->field === null)
-		{
-			$this->field = gf()->fun->array->new();
-		}
-
-		if ($this->from === NULL)
-		{
-			$this->from = gf()->fun->array->new();
-		}
-
-		if ($this->where === NULL)
-		{
-			$this->where = gf()->fun->array->new();
-		}
-
-		if ($this->order_by === null)
-		{
-			$this->order_by = gf()->fun->array->new();
-		}
-
-		if ($this->limit === null)
-		{
-			$this->limit = gf()->fun->array->new();
-		}
-
-		if ($this->group_by === null)
-		{
-			$this->group_by = gf()->fun->array->new();
-		}
-
-		if ($this->join === NULL)
-		{
-			$this->join = gf()->fun->array->new();
-		}
-
-		return $this;
-	}
-
 	private function ini_db_config (): self
 	{
-		if ($this->database_env_json_file_path === NULL)
-		{
-			$this->database_env_json_file_path = $this->on_set_open_with_env_json();
-		}
-
+		$this->database_env_json_file_path ??= $this->on_set_open_with_env_json();
 		if ($this->connection_key === NULL)
 		{
 			$this->set_connnection_key($this->on_set_connnection_key());
@@ -285,9 +378,12 @@ abstract class c_orm extends c_base_class
 		return $this;
 	}
 
-	protected abstract function on_set_connnection_key (): string;
+	protected function on_set_open_with_env_json (): string
+	{
+		return gf()->config->mysql->get_mysql_config_env_file_path();
+	}
 
-	protected abstract function on_set_open_with_env_json (): string;
+	protected abstract function on_set_connnection_key (): string;
 
 	protected abstract function on_db_driver (): i_db;
 }

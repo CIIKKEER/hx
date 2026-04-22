@@ -104,6 +104,12 @@ class c_array extends c_base_class
 		return implode($separator,$this->get());
 	}
 
+	public function map (callable $on_map): self
+	{
+		$this->m_ar = array_map($on_map,$this->get());
+		return $this;
+	}
+
 	public function free (): self
 	{
 		unset($this->m_ar);
