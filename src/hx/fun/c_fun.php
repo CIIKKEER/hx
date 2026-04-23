@@ -25,7 +25,7 @@ use hx\fun\jwt\c_jwt;
  * @property c_cipher			$cipher
  * @property c_time				$time
  * @property c_jwt				$jwt
- *
+ * @property c_regx				$regx
  *
  */
 class c_fun extends c_base_class
@@ -43,6 +43,7 @@ class c_fun extends c_base_class
 					->ado('cipher'		, c_cipher::class			, $k)
 					->ado('time'		, c_time::class				, $k)
 					->ado('jwt'			, c_jwt::class				, $k)
+					->ado('regx'		, c_regx::class				, $k)
 					->$k;
 		/* > */
 	}

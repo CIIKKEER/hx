@@ -69,6 +69,16 @@ class c_array extends c_base_class
 		return $this;
 	}
 
+	public function keys (): c_array
+	{
+		return $this->new()->new_with_array(array_keys($this->get()));
+	}
+
+	public function column (int|string|null $column_key , int|string|null $index_key = null): c_array
+	{
+		return $this->new()->new_with_array(array_column($this->get(),$column_key,$index_key));
+	}
+
 	public function search (mixed $v)
 	{
 		return new class($this->make_weak_reference(),$v) extends c_ok_error

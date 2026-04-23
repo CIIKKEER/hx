@@ -76,6 +76,7 @@ class c_mysqli extends c_base_class implements i_db
 		try
 		{
 			$this->m_mysqli->connect($conn->ip(),$conn->user(),$conn->password(),$conn->database(),$conn->port());
+			$this->m_mysqli->set_charset('utf8mb4');
 		}
 		catch (\Throwable $e)
 		{
@@ -424,9 +425,10 @@ class c_bind_parameter extends c_base_class implements i_bindx
 	public function ax (mixed $ax): self
 	{
 		match (gettype($ax)) {
-			"integer" => $this->ai($ax) ,
+			"integer" , "bool" , "boolean" => $this->ai($ax) ,
 			"double" => $this->ad($ax) ,
 			"string" => $this->as($ax) ,
+			default => gf()->exception->throw(1000008,"the type of the bound variable is incorrect.\n")
 		};
 		return $this;
 	}

@@ -1,13 +1,15 @@
 <?php
 namespace hx\exception;
 
+use hx\t_base_magic_method;
+
 class c_exception
 {
 	private static $m_on_set_exception_handler;
 
 	public function throw_with_string ($s = '')
 	{
-		throw new \Exception($s);
+		throw new \Exception(rtrim($s) . "\n");
 	}
 
 	public function throw_with_exception (\Exception $e)
@@ -17,12 +19,13 @@ class c_exception
 
 	public function throw_with_wrap (int $error_code , \Throwable $e)
 	{
-		throw new \Exception('[' . $error_code . ']->' . $e->getMessage());
+		throw new \Exception('[' . gf()->fun->cc->yellow(strval($error_code))->get() . ']->' . rtrim($e->getMessage()) . "\n");
 	}
 
 	public function throw (int $error_code , string $s)
 	{
-		$this->throw_with_string('[' . $error_code . '] ' . $s);
+		$this->throw_with_string('[' . gf()->fun->cc->yellow(strval($error_code))
+			->get() . '] ' . rtrim($s) . "\n");
 	}
 
 	/**
@@ -54,5 +57,50 @@ class c_exception
 		}
 
 		return $this;
+	}
+
+	public function try (callable $on_try): mixed
+	{
+		try
+		{
+			return new class($on_try())
+			{
+				use t_base_magic_method;
+			};
+		}
+		catch (\Throwable $e)
+		{
+			return new class(\WeakReference::create($e))
+			{
+				private ?\Throwable $e = null;
+
+				public function __construct (\WeakReference $w)
+				{
+					$this->e = $w->get();
+				}
+
+				public function catch (int $error_code = 9999999999 , callable $on_catch = null)
+				{
+					if ($this->e !== NULL)
+					{
+						
+						$on_catch === null ? gf()->exception->throw_with_wrap($error_code,$this->e) : $on_catch($this->e);
+					}
+				}
+
+				public function die ($error_code = 1111111111)
+				{
+					die('[' . gf()->fun->cc->yellow($error_code)->get() . '] ' . $this->e->getMessage() . "\n");
+				}
+
+				public function __get ($k)
+				{
+					match ($k) {
+						'die' => $this->die() ,
+						'catch' => $this->catch()
+					};
+				}
+			};
+		}
 	}
 }

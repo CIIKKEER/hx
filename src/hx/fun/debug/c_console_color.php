@@ -32,6 +32,7 @@ class c_console_color extends c_base_class
 		$this->s .= "\e[38;5;27m" . $s . "\e[0m";
 		return $this;
 	}
+
 	public function cyan (string $s = ''): c_console_color
 	{
 		$this->s .= "\e[38;5;14m" . $s . "\e[0m";
@@ -83,6 +84,8 @@ class c_console_color extends c_base_class
 
 	public function get (): string
 	{
-		return $this->s;
+		$s = $this->s;
+		$this->free();
+		return $s;
 	}
 }

@@ -55,6 +55,54 @@ class c_order_by extends c_base_class
 	}
 }
 
+class c_update extends c_base_class
+{
+	private c_orm $c_orm;
+	private i_reflection_property $it;
+
+	public function __construct (\WeakReference $w)
+	{
+		$this->c_orm = $w->get();
+		$this->it = gf()->reflection->property($this->c_orm,'it');
+	}
+
+	/**
+	 * 
+	 * @param 	array $set
+	 * @return 	\hx\db\i_bindx
+	 * @throws	\Exception
+	 * 
+	 */
+	public function set (array $set): i_bindx
+	{
+		/** <
+		 * 
+		 * @var c_array $update
+		 */
+		$update = gf()->fun->array->new_with_array($set);if ($this->c_orm->is_field_name_ok(...$update->keys()->get()) === FALSE)
+		{
+			gf()->exception->throw(130004, 'failed to check field validation status');
+		}
+
+		if ($update->count() === 0)
+		{
+			gf()->exception->throw(130003,'the content of the field to be updated cannot be empty');
+		}
+		$data = $this->dc()->new();
+		$data->sql = "update " . $this->c_orm->get_table_name() . " set";
+		$update->for_each(function ($k , $v) use ( $data)
+		{
+			$data->sql .= ' ' . $k . ' = ' . $v . ' ,';
+		});
+		$data->sql = rtrim($data->sql,',');
+		$data->sql .= $this->c_orm->get_where();
+		$update->free();
+
+		return $this->it->get()->query($data->sql);
+		/* > */
+	}
+}
+
 abstract class c_orm extends c_base_class
 {
 	private ?string $table_name = null;
@@ -66,22 +114,17 @@ abstract class c_orm extends c_base_class
 	private ?c_array $from = null;
 	private ?c_array $limit = null;
 	private ?c_array $group_by = null;
-	private ?i_trans $it = null;
 	private ?i_db $db = null;
+	protected ?i_trans $it = null;
 	protected ?c_array $order_by = null;
 	protected ?c_array $join = null;
 
-	public function get_table_name (): string
+	public function update (): c_update
 	{
-		if ($this->table_name === NULL)
-		{
-			$ar = explode('\\',get_class($this));
-			$this->table_name = array_pop($ar);
-		}
-		return $this->database_name === null ? $this->table_name : $this->database_name . '.' . $this->table_name;
+		return new c_update($this->ini_db_config()->make_weak_reference());
 	}
 
-	/**
+	/** <
 	 * 
 	 * @param 	array $insert
 	 * @return 	\hx\db\i_query
@@ -95,7 +138,11 @@ abstract class c_orm extends c_base_class
 		/**
 		 * @var c_array $insert
 		 */
-		$insert = gf()->fun->array->new_with_array($insert);
+		$insert = gf()->fun->array->new_with_array($insert);if ($this->is_field_name_ok(...$insert->keys()->get()) === FALSE)
+		{
+			gf()->exception->throw(130004,'failed to check field validation status');
+		}
+
 		if ($insert->count() === 0)
 		{
 			gf()->exception->throw(130000,'You will get an error when passing an empty array to the ORM insert method');
@@ -122,7 +169,7 @@ abstract class c_orm extends c_base_class
 			$bindx = $it->query($this->dc()->sql->insert);
 			$insert->for_each(function ($k , $v) use ( $it , $bindx)
 			{
-				$bindx->ax($v);
+				$bindx->ax(TRUE);
 			});
 
 			try
@@ -131,11 +178,57 @@ abstract class c_orm extends c_base_class
 			}
 			catch (\Throwable $e)
 			{
-				gf()->exception->throw_with_wrap(130001, $e);
+				gf()->exception->throw_with_wrap(130001,$e);
 			}
 		});
+		$insert->free();
 
 		return $this->dc()->sql->insert_status;
+	}
+	/* > */
+	private function get_all_fields_in_current_table (): c_array
+	{
+		/**
+		 * 
+		 * @var c_array $ar
+		 */
+		$ar = gf()->fun->array->new();
+		$this->it->query("show fields from " . $this->get_table_name())
+			->go()
+			->for_each(function ($k , $v) use ( $ar)
+		{
+			$ar->push($v->get('Field'));
+		});
+
+		return $ar;
+	}
+
+	public function is_field_name_ok (string ...$field): bool
+	{
+		/**
+		 * 
+		 * @var c_array $all_fields
+		 * 
+		 */
+		$all_fields = $this->get_all_fields_in_current_table();
+		foreach ($field as $v)
+		{
+			if ($all_fields->search($v)->ok() === FALSE)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public function get_table_name (): string
+	{
+		if ($this->table_name === NULL)
+		{
+			$ar = explode('\\',get_class($this));
+			$this->table_name = array_pop($ar);
+		}
+		return $this->database_name === null ? $this->table_name : $this->database_name . '.' . $this->table_name;
 	}
 
 	public function get_order_by (): string
