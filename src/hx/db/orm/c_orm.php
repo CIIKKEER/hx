@@ -1,4 +1,6 @@
 <?php
+declare(strict_types = 1)
+	;
 namespace hx\db\orm;
 
 use hx\c_base_class;
@@ -11,46 +13,143 @@ use hx\fun\array\c_array;
 use hx\reflection\i_reflection_property;
 use hx\c_ok_error;
 use hx\db\i_query_status;
+use hx\db\mysqli\c_trans;
+use hx\fun\stdclass\c_stdclass;
 
-class c_order_by extends c_base_class
+class c_where extends c_base_class
 {
 	private c_orm $c_orm;
-	private i_reflection_property $order_by;
+	private c_array $where;
+	private c_stdclass $kxv;
+	private static ?c_array $where_keyword = null;
 
 	public function __construct (\WeakReference $w)
 	{
 		$this->c_orm = $w->get();
-		$this->order_by = gf()->reflection->property($this->c_orm,'order_by');
+		$this->where = gf()->reflection->property($this->c_orm,'where')->get();
+		$this->kxv = gf()->fun->stdclass->new();
+
+		# keyword
+		#
+		#
+		self::$where_keyword ??= gf()->fun->array->push('and','or','=','!=','<>','<',">",'is not null');
+	}
+
+	private function kxv (string $k , $x , $v): c_stdclass
+	{
+		return gf()->fun->stdclass->new()->push($k,$x,$v);
+	}
+
+	/* <
+	 * 
+	 */
+	public function and (string $k , $x , $v): self
+	{
+		$this->kxv->push([ 'p' => $this->kxv($k,$x,'?')->to_array()->unshift('and')->get(),'v' => $v]);
+
+		return $this;
+	}
+
+	public function or (string $k , $x , $v): self
+	{
+		$this->kxv->push([ 'p' => $this->kxv($k,$x,'?')->to_array()->unshift('or')->get(),'v' => $v]);
+
+		return $this;
+	}
+	
+	private function is_where_condition_keyword_ok (c_array $keyword): bool
+	{		 
+		$data = gf()->fun->stdclass->new();$data->ok = true;$keyword->for_each(function ($k , $v) use ( $data)
+		{
+			if (self::$where_keyword->search($v)->ok() === FALSE)
+			{
+				$data->ok = false;
+				return true;
+			}
+		});
+
+		return $data->ok;/* > */
+	}
+
+	/**
+	 * @throws \Exception : if the field name in the WHERE condition is incorrect then i will throw a standard exception
+	 * 
+	 *  
+	 */
+	public function done (): c_orm
+	{
+		/* where condition keyword ok ? <
+		 * 
+		 */
+		if ($this->is_where_condition_keyword_ok($this->kxv->to_array()->column('p')->column(0)) === false || $this->is_where_condition_keyword_ok($this->kxv->to_array()->column('p')->column(2)) === false)/* > */
+		{
+			return gf()->exception->throw(130006,'the field name in the where keyword is incorrect');
+		}
+
+		/* is the field name in the WHERE condition correct ? <
+		 * 
+		 */
+		$ar_fields=$this->kxv->to_array()->column('p')->column(1);if ($this->c_orm->is_field_name_ok(...$ar_fields->get()) === FALSE)/* > */
+		{
+			return gf()->exception->throw(130005,'the field name :' . $ar_fields->to_string() . 'in the where condition is incorrect');
+		}
+
+		/* make parameter place holder
+		 * 
+		 */
+		$this->kxv->for_each(function ($k , $v)
+		{
+			$this->where->push($v);
+		});
+		$this->kxv->free();
+
+		return $this->c_orm;
+	}
+}
+
+class c_order_by extends c_base_class
+{
+	private c_orm $c_orm;
+	private c_array $order_by;
+
+	public function __construct (\WeakReference $w)
+	{
+		$this->c_orm = $w->get();
+		$this->order_by = gf()->reflection->property($this->c_orm,'order_by')->get();
 	}
 
 	public function asc (string $order): self
 	{
-		if ($this->order_by->get()->count() === 0 && empty($order) === FALSE)
-		{
-			$this->order_by->get()->push(" order by " . $order . " asc");
-		}
-		else
-		{
-			$this->order_by->get()->push($order . ' asc');
-		}
+		$this->order_by->push([ $order,'asc']);
+
 		return $this;
 	}
 
 	public function desc (string $order): self
 	{
-		if ($this->order_by->get()->count() === 0 && empty($order) === FALSE)
-		{
-			$this->order_by->get()->push(" order by " . $order . " desc");
-		}
-		else
-		{
-			$this->order_by->get()->push($order . ' desc');
-		}
+		$this->order_by->push([ $order,'desc']);
 		return $this;
 	}
 
+	private function is_orderby_field_name_ok (c_array $field): bool
+	{
+		return $this->c_orm->is_field_name_ok(...$field->get());
+	}
+
+	/**
+	 * 
+	 * @return c_orm
+	 * @throws \Exception
+	 * 
+	 */
 	public function by (): c_orm
 	{
+		$order_by_field = $this->order_by->column(0);
+		if ($this->is_orderby_field_name_ok($order_by_field) === FALSE)
+		{
+			return gf()->exception->throw(130007,'the field name ' . $order_by_field->to_string() . 'in order by condition is incorrect');
+		}
+
 		return $this->c_orm;
 	}
 }
@@ -58,12 +157,12 @@ class c_order_by extends c_base_class
 class c_update extends c_base_class
 {
 	private c_orm $c_orm;
-	private i_reflection_property $it;
+	private c_trans $it;
 
 	public function __construct (\WeakReference $w)
 	{
 		$this->c_orm = $w->get();
-		$this->it = gf()->reflection->property($this->c_orm,'it');
+		$this->it = gf()->reflection->property($this->c_orm,'it')->get();
 	}
 
 	/**
@@ -88,18 +187,75 @@ class c_update extends c_base_class
 		{
 			gf()->exception->throw(130003,'the content of the field to be updated cannot be empty');
 		}
+		
+		# where
+		#
+		#
+		if(empty($this->c_orm->get_where()))
+		{
+			gf()->exception->throw(130004, 'the updated condition is missing');
+		}
+		
+		# update set ...
+		#
+		#
 		$data = $this->dc()->new();
 		$data->sql = "update " . $this->c_orm->get_table_name() . " set";
 		$update->for_each(function ($k , $v) use ( $data)
 		{
-			$data->sql .= ' ' . $k . ' = ' . $v . ' ,';
+			$data->sql .=  ' '.$k . ' = ? ,';
 		});
 		$data->sql = rtrim($data->sql,',');
-		$data->sql .= $this->c_orm->get_where();
-		$update->free();
 
-		return $this->it->get()->query($data->sql);
+		# where condition
+		#
+		#
+		$data->sql.=$this->c_orm->get_where();
+		
+		# bindx
+		#
+		#
+		$data->update = $update;$this->it->auto(function(i_trans $it) use($data) 
+		{
+			/**
+			 * @var \hx\db\i_bindx $bindx
+			 */
+			$data->bindx = $this->it->query($data->sql);$data->update->for_each(function ($k , $v) use ( $data)
+			{
+				$data->bindx->ax($v);
+			});
+		});
+	
+		$update->free();
+		
+		return $data->bindx;
 		/* > */
+	}
+}
+
+class c_table_metadata_description extends c_base_class
+{
+	private static ?c_stdclass $md = NULL;
+	private c_orm $c_orm;
+
+	public function __construct (\WeakReference $w)
+	{
+		$this->c_orm = $w->get();
+	}
+
+	public function is_ok (): bool
+	{
+		return self::$md === NULL ? false : true;
+	}
+
+	public function get (): c_array
+	{
+		self::$md ??= gf()->fun->stdclass->new();
+		if (self::$md->exist($this->c_orm->get_table_name()) === FALSE)
+		{
+			self::$md->set($this->c_orm->get_table_name(),$this->c_orm->get_all_fields_in_current_table());
+		}
+		return self::$md->get($this->c_orm->get_table_name());
 	}
 }
 
@@ -109,12 +265,13 @@ abstract class c_orm extends c_base_class
 	private ?string $connection_key = null;
 	private ?string $database_name = null;
 	private ?string $database_env_json_file_path = null;
-	private ?c_array $where = null;
 	private ?c_array $field = null;
 	private ?c_array $from = null;
 	private ?c_array $limit = null;
 	private ?c_array $group_by = null;
 	private ?i_db $db = null;
+	private ?c_table_metadata_description $tmd = null;
+	protected ?c_array $where = null;
 	protected ?i_trans $it = null;
 	protected ?c_array $order_by = null;
 	protected ?c_array $join = null;
@@ -169,7 +326,7 @@ abstract class c_orm extends c_base_class
 			$bindx = $it->query($this->dc()->sql->insert);
 			$insert->for_each(function ($k , $v) use ( $it , $bindx)
 			{
-				$bindx->ax(TRUE);
+				$bindx->ax($v);
 			});
 
 			try
@@ -186,16 +343,12 @@ abstract class c_orm extends c_base_class
 		return $this->dc()->sql->insert_status;
 	}
 	/* > */
-	private function get_all_fields_in_current_table (): c_array
+	public function get_all_fields_in_current_table (): c_array
 	{
-		/**
-		 * 
+		/** <
 		 * @var c_array $ar
 		 */
-		$ar = gf()->fun->array->new();
-		$this->it->query("show fields from " . $this->get_table_name())
-			->go()
-			->for_each(function ($k , $v) use ( $ar)
+		$ar = gf()->fun->array->new();$this->it->query("show fields from " . $this->get_table_name())->go()->for_each(function ($k , $v) use ( $ar)/* > */
 		{
 			$ar->push($v->get('Field'));
 		});
@@ -205,13 +358,10 @@ abstract class c_orm extends c_base_class
 
 	public function is_field_name_ok (string ...$field): bool
 	{
-		/**
-		 * 
+		/** <
 		 * @var c_array $all_fields
-		 * 
 		 */
-		$all_fields = $this->get_all_fields_in_current_table();
-		foreach ($field as $v)
+		$all_fields = $this->tmd->get();foreach ($field as $v)/* > */
 		{
 			if ($all_fields->search($v)->ok() === FALSE)
 			{
@@ -219,6 +369,11 @@ abstract class c_orm extends c_base_class
 			}
 		}
 		return true;
+	}
+
+	public function get_database_name (): string
+	{
+		return $this->database_name;
 	}
 
 	public function get_table_name (): string
@@ -233,7 +388,19 @@ abstract class c_orm extends c_base_class
 
 	public function get_order_by (): string
 	{
-		return $this->order_by->implode(',');
+		if ($this->order_by->count() === 0)
+		{
+			return '';
+		}
+
+		$order_by = 'order by ';
+		$this->order_by->for_each(function ($k , $v) use ( &$order_by)
+		{
+			$order_by .= gf()->fun->array->new_with_array($v)
+				->implode(' ') . ",";
+		});
+
+		return rtrim($order_by,',');
 	}
 
 	public function order_by (string ...$order_by): self
@@ -264,9 +431,20 @@ abstract class c_orm extends c_base_class
 		$sql .= " " . $this->get_where();
 		$sql .= " " . $this->get_order_by();
 
-		$this->sql_free();
+		/**
+		 * @var i_bindx $bindx
+		 */
+		$bindx = $this->it->query($sql);
 
-		return $this->it->query($sql);
+		/* where
+		 * 
+		 */
+		$this->where->for_each(function ($k , $v) use ( $bindx)
+		{
+			$bindx->ax($v['v']);
+		});
+		$this->sql_free();
+		return $bindx;
 	}
 
 	private function get_join (): string
@@ -316,7 +494,8 @@ abstract class c_orm extends c_base_class
 		{
 			$this->field->push('*');
 		}
-		return $this->field->implode(' , ');
+
+		return rtrim($this->field->implode(','));
 	}
 
 	public function get_from (): string
@@ -336,77 +515,30 @@ abstract class c_orm extends c_base_class
 		return $this;
 	}
 
-	/* <
-	 * 
-	 */
 	public function get_where (): string
 	{
-		$this->dc()->sql->where = '';
-		$this->where->for_each(function ($k , $v)
+		if ($this->where->count() === 0)
 		{
-			$this->dc()->sql->where .= implode('',$v);
+			return '';
+		}
+
+		/**
+		 * @var c_array $where_p
+		 */
+		$data = $this->dc()->new();
+		$data->where_p = gf()->fun->array->new();
+		$this->where->for_each(function ($k , $v) use ( $data)
+		{
+			$data->where_p->push(...$v['p']);
 		});
-		return $this->where->empty() === true ? '' : ' where ' . $this->dc()->sql->where;
-	}
-	
-	public function where():self
-	{
-		$this->ini_db_config()->where->push([ 1,' = ',1]);
-				 
-		return $this;		
-	}
-	public function and ($k , $x ,... $v ): self
-	{
-		return $this->where_and($k, $x, ...$v);
-	}
-	private function where_and ($k , $x ,... $v ): self
-	{
-		$this->ini_db_config()->where->push($this->where_x()->kxv($k,$x,...$v)->and());
-		
-		return $this;
-	}
-	public function or ($k , $x , ...$v): self
-	{
-		return $this->where_or($k, $x, ...$v);
-	}
-	private function where_or ($k , $x , ...$v): self
-	{
-		$this->ini_db_config()->where->push($this->where_x()->kxv($k,$x,...$v)->or());
-		return $this;
-	}
-	private function where_x ()
-	{
-		return new class() extends c_base_class
-		{
+		$data->where_p->unshift('where',1,'=',1);
 
-			public function kxv ($k , $x , ...$v): self
-			{
-				if (func_num_args() === 2)
-				{
-					$v = $x;
-					$x = ' = ';
-				}
-				else
-				{
-					$v = array_shift($v);
-				}
-				
-				$this->kxv 		= gf()->fun->array->new_with_array([ $k,$x,$v])->map(fn ($a) => trim($a))->get();
-				$this->kxv[1] 	= ' ' . $this->kxv[1] . ' ';
+		return $data->where_p->implode(' ');
+	}
 
-				return $this;
-			}
-
-			public function and (): array
-			{
-				return array_merge([ ' and '],$this->kxv);
-			}
-
-			public function or (): array
-			{
-				return array_merge([ ' or '],$this->kxv);
-			}
-		};
+	public function where (): c_where
+	{
+		return new c_where($this->ini_db_config()->make_weak_reference());
 	}
 
 	/* >
@@ -419,7 +551,7 @@ abstract class c_orm extends c_base_class
 
 		return $this;
 	}
-	private function sql_ini (): self
+	private function ini_sql (): self
 	{
 		$this->field 	??= gf()->fun->array->new();
 		$this->from 	??= gf()->fun->array->new();
@@ -441,8 +573,15 @@ abstract class c_orm extends c_base_class
 			$this->set_connnection_key($this->on_set_connnection_key());
 		}
 
-		$this->sql_ini();
+		return $this->ini_sql()->ini_table_matedata_description();
+	}
 
+	private function ini_table_matedata_description (): self
+	{
+		if ($this->tmd === NULL)
+		{
+			$this->tmd = new c_table_metadata_description($this->make_weak_reference());
+		}
 		return $this;
 	}
 

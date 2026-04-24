@@ -1,4 +1,6 @@
 <?php
+declare(strict_types = 1)
+	;
 namespace hx\fun\array;
 
 use hx\c_base_class;
@@ -79,7 +81,7 @@ class c_array extends c_base_class
 		return $this->new()->new_with_array(array_column($this->get(),$column_key,$index_key));
 	}
 
-	public function search (mixed $v)
+	public function search (mixed $v): i_ok_error
 	{
 		return new class($this->make_weak_reference(),$v) extends c_ok_error
 		{
@@ -101,6 +103,12 @@ class c_array extends c_base_class
 	{
 		$ar = array_shift($this->get());
 		return $ar;
+	}
+
+	public function unshift (...$v): self
+	{
+		array_unshift($this->get(),...$v);
+		return $this;
 	}
 
 	public function push (...$v): self
@@ -125,5 +133,24 @@ class c_array extends c_base_class
 		unset($this->m_ar);
 		$this->m_ar = [ ];
 		return $this;
+	}
+
+	public function merge_x_row_2_single (): self
+	{
+		/**
+		 * @var c_array $ar
+		 */
+		$ar = gf()->fun->array->new();
+		$this->for_each(function ($k , $v) use ( $ar)
+		{
+			$ar->push(...$v);
+		});
+		return $ar;
+	}
+
+	public function to_string (): string
+	{
+		return gf()->fun->debug->print_r_to_string($this->get());
+		;
 	}
 }

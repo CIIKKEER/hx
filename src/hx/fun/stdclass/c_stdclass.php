@@ -185,6 +185,16 @@ class c_stdclass extends \stdClass
 		return is_callable($v) ? $this : !$ok;
 	}
 
+	public function free (): self
+	{
+		$this->for_each(function ($k , $v)
+		{
+			unset($this->$k);
+		});
+
+		return $this;
+	}
+
 	/** 	
 	 * @desc	Check whether the value of the current property $k is empty
 	 * @param 	string 			$k

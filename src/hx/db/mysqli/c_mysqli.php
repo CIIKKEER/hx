@@ -1,4 +1,6 @@
 <?php
+declare(strict_types = 1)
+	;
 namespace hx\db\mysqli;
 
 use hx\db\i_db;
@@ -329,10 +331,7 @@ class c_bind_parameter extends c_base_class implements i_bindx
 		{
 			if ($this->px->to_array()->count() !== $ar_count - 1)
 			{
-				$this->on_error(gf()->fun->cc->new()
-					->blue('SQL.PREPARE : ')
-					->as('The number of MySQL bound parameter variables does not match the target placeholders')
-					->get());
+				$this->on_error(gf()->fun->cc->new()->blue('SQL.PREPARE : ')->as('The number of MySQL bound parameter variables does not match the target placeholders')->get());
 			}
 
 			if ($k !== ($ar_count - 1))
@@ -495,7 +494,7 @@ class c_query extends c_base_class implements i_query
 			{
 				break;
 			}
-			$this->data->add($i++, gf()->fun->stdclass->new_with_array($row));
+			$this->data->add(strval($i++), gf()->fun->stdclass->new_with_array($row));
 		}
 		/* > */
 		$this->mr->close();
@@ -515,11 +514,6 @@ class c_query extends c_base_class implements i_query
 		return $this;
 	}
 
-	// 	public function getx ()
-	// 	{
-	// 		return $this->bp->mysqli;
-	// 	}
-
 	/**
 	 * 
 	 * {@inheritDoc}
@@ -529,7 +523,6 @@ class c_query extends c_base_class implements i_query
 	public function get_single_row (): c_stdclass
 	{
 		/** <
-		 * 
 		 * @var c_stdclass $data
 		 */
 		$data = gf()->fun->stdclass->new();$this->for_each(function ($k , $v) use (&$data)

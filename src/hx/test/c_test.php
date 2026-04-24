@@ -82,20 +82,15 @@ class c_test extends c_base_class
 			/* <
 			 * 
 			 */
-			$aaa->insert([ 'name' => 'jack','age' => 11])->get_insert_id()
-			,
-			$aaa->where()->and(1,'?')->select()->ax(1)->go()->get_single_row()
-			,
-			
-			gf()->exception->try (fn () => $aaa->where()->and('id',1)->update()->set(['name'=>'?','age'=>21])->ax(gf()->fun->cipher->rand->uuid()->v4())->go()->get_affected_rows())->die()
+			gf()->exception->try ( fn () => $aaa->field('*','id')->where()->and('id','=', 1)->and('age','=',21)->done()->order()->asc('id')->desc('age')->by()->select()->go()->get_single_row())->die
+		
 			
 			
-				
 			
 			
-				
-			 
-			/* > */
+			//gf()->exception->try (fn () => $aaa->where()->and('id',1)->update()->set(['name'=>'jack.update'.gf()->fun->cipher->rand->uuid()->v4(),'age'=>21])->go()->get_affected_rows())->die
+
+		/* > */
 		// 			$aaa->field('id')->where()->and("'aaaaaaaaaaaa'",'?')->and(0, 0)->and('id', '>',0)->or("?", 100)->and(1, 'in',"(?)")->select()->as('aaaaaaaaaaaa')->ai(100)->aia([1,2,3])->go()->get_single_row()
 		// 			,$aaa->field('id')->where()->and("'aaaaaaaaaaaa'",'?')->and(0, 0)->and('id', '>',0)->or("?", 100)->and(1, 'in',"(?)")->select()->as('aaaaaaaaaaaa')->ai(100)->aia([1,2,3])->go()->get_single_row()
 		// 			,$aaa->field()->from("aaa left join bbb on aaa.id=bbb.id")->select()->go()->get_single_row()

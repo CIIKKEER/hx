@@ -1,7 +1,15 @@
 <?php
 namespace hx;
 
-class c_ok_error extends c_base_class
+interface i_ok_error
+{
+
+	public function ok (mixed $v = null): mixed;
+
+	public function error (mixed $v = null): mixed;
+}
+
+class c_ok_error extends c_base_class implements i_ok_error
 {
 	protected ?bool $ok = null;
 

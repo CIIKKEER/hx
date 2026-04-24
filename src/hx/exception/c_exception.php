@@ -2,12 +2,13 @@
 namespace hx\exception;
 
 use hx\t_base_magic_method;
+use hx\fun\stdclass\c_stdclass;
 
 class c_exception
 {
 	private static $m_on_set_exception_handler;
 
-	public function throw_with_string ($s = '')
+	public function throw_with_string (string $s = '')
 	{
 		throw new \Exception(rtrim($s) . "\n");
 	}
@@ -61,46 +62,80 @@ class c_exception
 
 	public function try (callable $on_try): mixed
 	{
-		try
+		return new class(\WeakReference::create($on_try))
 		{
-			return new class($on_try())
-			{
-				use t_base_magic_method;
-			};
-		}
-		catch (\Throwable $e)
-		{
-			return new class(\WeakReference::create($e))
-			{
-				private ?\Throwable $e = null;
+			private mixed $r;
+			private bool $ok;
 
-				public function __construct (\WeakReference $w)
+			public function __construct (\WeakReference $w)
+			{
+				try
 				{
-					$this->e = $w->get();
+					$this->r = ($w->get())();
+					$this->ok = true;
 				}
-
-				public function catch (int $error_code = 9999999999 , callable $on_catch = null)
+				catch (\Throwable $e)
 				{
-					if ($this->e !== NULL)
+					$this->ok = FALSE;
+					$this->r = new class(\WeakReference::create($e))
 					{
-						
-						$on_catch === null ? gf()->exception->throw_with_wrap($error_code,$this->e) : $on_catch($this->e);
-					}
-				}
+						private ?\Throwable $e = null;
 
-				public function die ($error_code = 1111111111)
-				{
-					die('[' . gf()->fun->cc->yellow($error_code)->get() . '] ' . $this->e->getMessage() . "\n");
-				}
+						public function __construct (\WeakReference $w)
+						{
+							$this->e = $w->get();
+						}
 
-				public function __get ($k)
-				{
-					match ($k) {
-						'die' => $this->die() ,
-						'catch' => $this->catch()
+						public function catch (int $error_code = 9999999999 , callable $on_catch = null)
+						{
+							if ($this->e !== NULL)
+							{
+								$on_catch === null ? gf()->exception->throw_with_wrap($error_code,$this->e) : $on_catch($this->e);
+							}
+						}
+
+						public function die ($error_code = 1111111111)
+						{
+							die('[' . gf()->fun->cc->yellow($error_code)->get() . ']->' . $this->e->getMessage() . "\n");
+						}
 					};
 				}
-			};
-		}
+			}
+
+			public function __get (string $k): mixed
+			{
+				if ($this->ok)
+				{
+					return $this->r;
+				}
+				else
+				{
+					match ($k) {
+						'die' => $this->r->die() ,
+						'catch' => $this->catch() ,
+					};
+				}
+			}
+
+			public function __call (string $k , array $v): mixed
+			{
+				if ($this->ok)
+				{
+					return $this->r;
+				}
+				else
+				{
+					if ($k === 'die')
+					{
+						return $this->r->die(...$v);
+					}
+
+					if ($k === 'catch')
+					{
+						return $this->r->catch(...$v);
+					}
+				}
+			}
+		};
 	}
 }
