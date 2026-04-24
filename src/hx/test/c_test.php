@@ -82,9 +82,15 @@ class c_test extends c_base_class
 			/* <
 			 * 
 			 */
-			gf()->exception->try ( fn () => $aaa->field('*','id')->where()->and('id','=', 1)->and('age','=',21)->done()->order()->asc('id')->desc('age')->by()->select()->go()->get_single_row())->die
+			gf()->exception->try ( fn () => $aaa->field()->where()->and('id','=', 1)->and('age','=',21)->done()->order()->asc('id')->desc('age')->by()->select()->go()->get_single_row())->die
 		
+			,
+			$aaa->query()->sql("select now(),? as 'aaaaaaaaaaaa';")->ax(1000)->go()->get_single_row()
+			,
+			$aaa->query->sql("select version();")->go()->get_single_row()
 			
+			
+		
 			
 			
 			

@@ -16,6 +16,18 @@ use hx\db\i_query_status;
 use hx\db\mysqli\c_trans;
 use hx\fun\stdclass\c_stdclass;
 
+/**
+ * 
+ * @author 		Administrator
+ * 
+ * 
+ */
+interface i_sql
+{
+
+	public function sql (string $sql): i_bindx;
+}
+
 class c_where extends c_base_class
 {
 	private c_orm $c_orm;
@@ -259,6 +271,11 @@ class c_table_metadata_description extends c_base_class
 	}
 }
 
+/**
+ * 
+ * @author Administrator
+ * @property	i_sql			$query
+ */
 abstract class c_orm extends c_base_class
 {
 	private ?string $table_name = null;
@@ -403,17 +420,6 @@ abstract class c_orm extends c_base_class
 		return rtrim($order_by,',');
 	}
 
-	public function order_by (string ...$order_by): self
-	{
-		if ($this->ini_db_config()->order_by->count() === 0 && count($order_by) > 0)
-		{
-			$this->order_by->push(" order by " . array_shift($order_by));
-		}
-		$this->order_by->push(...$order_by);
-
-		return $this;
-	}
-
 	public function order (): c_order_by
 	{
 		return new c_order_by($this->ini_db_config()->make_weak_reference());
@@ -457,13 +463,13 @@ abstract class c_orm extends c_base_class
 		return new class($this->ini_db_config()->make_weak_reference()) extends c_base_class
 		{
 			private c_orm $c_orm;
-			private i_reflection_property $join;
+			private c_array $join;
 			private ?string $join_table = null;
 
 			public function __construct (\WeakReference $w)
 			{
 				$this->c_orm = $w->get();
-				$this->join = gf()->reflection->property($this->c_orm,'join');
+				$this->join = gf()->reflection->property($this->c_orm,'join')->get();
 			}
 
 			public function left ($table)
@@ -474,11 +480,20 @@ abstract class c_orm extends c_base_class
 
 			public function on (string $ta , string $tb): c_orm
 			{
-				$this->join->get()->push('left join ',$this->join_table," on ",$ta,' = ',$tb);
+				$this->join->push('left join ',$this->join_table," on ",$ta,' = ',$tb);
 
 				return $this->c_orm;
 			}
 		};
+	}
+
+	public function __get ($k): mixed
+	{
+		if ($k === 'query')
+		{
+			return $this->query();
+		}
+		return $this;
 	}
 
 	public function field (string ...$fields): self
@@ -539,6 +554,34 @@ abstract class c_orm extends c_base_class
 	public function where (): c_where
 	{
 		return new c_where($this->ini_db_config()->make_weak_reference());
+	}
+
+	public function query ()
+	{
+		return new class($this->make_weak_reference()) extends c_base_class implements i_sql
+		{
+			private c_orm $c_orm;
+			private c_trans $it;
+
+			public function __construct (\WeakReference $w)
+			{
+				$this->c_orm = $w->get();
+				$this->it = gf()->reflection->property($this->c_orm,'it')->get();
+			}
+
+			public function auto (string $sql , callable $on_query)
+			{
+				$this->it->auto(function (i_trans $it) use ( $sql , $on_query)
+				{
+					return $on_query($it->query($sql));
+				});
+			}
+
+			public function sql ($sql): i_bindx
+			{
+				return $this->it->query($sql);
+			}
+		};
 	}
 
 	/* >
