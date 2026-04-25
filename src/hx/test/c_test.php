@@ -77,17 +77,45 @@ class c_test extends c_base_class
 		 *
 		 */
 
-		gf()->fun->debug->print_r
-		(
+		gf()->fun->debug->print_r(
+		gf()->exception->try(fn () => $aaa->insert()
+			->into([ 'name' => 'jack.insert','age' => 21])
+			->go()->get_insert_id())->die,
+			
+			$aaa->where()->and('name', '=', 'jack.insert')->done()->order()->desc('id')->by()->select()->go()->get_single_row()
+			,
+						
+			
+			
+		gf()->exception->try(fn () => $aaa->where()
+			->and('id','in',[ 1,2,3])
+			->and('id','is not null',null)
+			->or('id','is not null',NULL)
+			->and('id','> 0 and id< (select max(id) from ' . $aaa->get_table_name() . ')',null)
+			->and('id','>',0)
+			->and("(select count(*) from " . $aaa->get_table_name() . ")>0",null,null)
+			->or("id","between",0)
+			->and("","",1)
+			->
+		done()
+			->select()
+			->go()
+			->get_single_row())->die
 			/* <
 			 * 
 			 */
-			gf()->exception->try ( fn () => $aaa->field()->where()->and('id','=', 1)->and('age','=',21)->done()->order()->asc('id')->desc('age')->by()->select()->go()->get_single_row())->die
+			
+			,gf()->exception->try ( fn () => $aaa->field()->where()->and('id','=', 1)->and('age','=',21)->done()->order()->asc('id')->desc('age')->by()->select()->go()->get_single_row())->die
 		
 			,
 			$aaa->query()->sql("select now(),? as 'aaaaaaaaaaaa';")->ax(1000)->go()->get_single_row()
 			,
-			$aaa->query->sql("select version();")->go()->get_single_row()
+			$aaa->query->sql("select version()")->go()->get_single_row()
+			,
+			gf()->exception->try(fn()=>$aaa->where()->and('id', 'in',[1,2,3,])->and('id','is not null',null)->done()->update()->set(['name'=>'jack.name'])->go()->get_information())->die
+				
+				
+			
 			
 			
 		

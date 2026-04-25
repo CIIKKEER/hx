@@ -15,6 +15,7 @@ use hx\c_ok_error;
 use hx\db\i_query_status;
 use hx\db\mysqli\c_trans;
 use hx\fun\stdclass\c_stdclass;
+use function hx\route\to_string;
 
 /**
  * 
@@ -28,7 +29,17 @@ interface i_sql
 	public function sql (string $sql): i_bindx;
 }
 
-class c_where extends c_base_class
+interface i_where
+{
+
+	public function and (string $k , $x , $v): self;
+
+	public function or (string $k , $x , $v): self;
+
+	public function done (): c_orm;
+}
+
+class c_where extends c_base_class implements i_where
 {
 	private c_orm $c_orm;
 	private c_array $where;
@@ -44,7 +55,7 @@ class c_where extends c_base_class
 		# keyword
 		#
 		#
-		self::$where_keyword ??= gf()->fun->array->push('and','or','=','!=','<>','<',">",'is not null');
+		self::$where_keyword ??= gf()->fun->array->push();
 	}
 
 	private function kxv (string $k , $x , $v): c_stdclass
@@ -57,30 +68,31 @@ class c_where extends c_base_class
 	 */
 	public function and (string $k , $x , $v): self
 	{
-		$this->kxv->push([ 'p' => $this->kxv($k,$x,'?')->to_array()->unshift('and')->get(),'v' => $v]);
+		$this->kxv->push([ 'p' => $this->kxv($k,$x,is_array($v)?'(?)':'?')->to_array()->unshift('and')->get(),'v' => $v]);
 
 		return $this;
 	}
 
 	public function or (string $k , $x , $v): self
 	{
-		$this->kxv->push([ 'p' => $this->kxv($k,$x,'?')->to_array()->unshift('or')->get(),'v' => $v]);
+		$this->kxv->push([ 'p' => $this->kxv($k,$x,is_array($v)?'(?)':'?')->to_array()->unshift('or')->get(),'v' => $v]);
 
 		return $this;
 	}
-	
+ 
 	private function is_where_condition_keyword_ok (c_array $keyword): bool
 	{		 
-		$data = gf()->fun->stdclass->new();$data->ok = true;$keyword->for_each(function ($k , $v) use ( $data)
-		{
-			if (self::$where_keyword->search($v)->ok() === FALSE)
-			{
-				$data->ok = false;
-				return true;
-			}
-		});
+		return true;
+		// 		$data = gf()->fun->stdclass->new();$data->ok = true;$keyword->for_each(function ($k , $v) use ( $data)
+		// 		{
+		// 			if (self::$where_keyword->search($v)->ok() === FALSE)
+		// 			{
+		// 				$data->ok = false;
+		// 				return true;
+		// 			}
+		// 		});
 
-		return $data->ok;/* > */
+		return $data->ok; /* > */
 	}
 
 	/**
@@ -93,24 +105,32 @@ class c_where extends c_base_class
 		/* where condition keyword ok ? <
 		 * 
 		 */
-		if ($this->is_where_condition_keyword_ok($this->kxv->to_array()->column('p')->column(0)) === false || $this->is_where_condition_keyword_ok($this->kxv->to_array()->column('p')->column(2)) === false)/* > */
-		{
-			return gf()->exception->throw(130006,'the field name in the where keyword is incorrect');
-		}
+		// 		$where_k = $this->kxv->to_array()->column('p')->column(0);
+		// 		$where_v = $this->kxv->to_array()->column('p')->column(2);
+		// 		if ($this->is_where_condition_keyword_ok($where_k) === false || $this->is_where_condition_keyword_ok($where_v) === false)/* > */
+		// 		{
+		// 			return gf()->exception->throw(130006,'the field name ' . $where_k->to_string() . $where_v->to_string() . 'in the where keyword is incorrect');
+		// 		}
 
 		/* is the field name in the WHERE condition correct ? <
 		 * 
 		 */
-		$ar_fields=$this->kxv->to_array()->column('p')->column(1);if ($this->c_orm->is_field_name_ok(...$ar_fields->get()) === FALSE)/* > */
-		{
-			return gf()->exception->throw(130005,'the field name :' . $ar_fields->to_string() . 'in the where condition is incorrect');
-		}
+		// 		$ar_fields=$this->kxv->to_array()->column('p')->column(1);if ($this->c_orm->is_field_name_ok(...$ar_fields->get()) === FALSE)/* > */
+		// 		{
+		// 			return gf()->exception->throw(130005,'the field name :' . $ar_fields->to_string() . 'in the where condition is incorrect');
+		// 		}
 
 		/* make parameter place holder
 		 * 
 		 */
 		$this->kxv->for_each(function ($k , $v)
 		{
+			if ($v['v'] === null)
+			{
+				unset($v['p'][3]);
+				unset($v['v']);
+			}
+
 			$this->where->push($v);
 		});
 		$this->kxv->free();
@@ -166,7 +186,19 @@ class c_order_by extends c_base_class
 	}
 }
 
-class c_update extends c_base_class
+interface i_update
+{
+
+	public function set (array $set): i_bindx;
+}
+
+interface i_insert
+{
+
+	public function into (array $insert): i_bindx;
+}
+
+class c_insert extends c_base_class implements i_insert
 {
 	private c_orm $c_orm;
 	private c_trans $it;
@@ -175,6 +207,62 @@ class c_update extends c_base_class
 	{
 		$this->c_orm = $w->get();
 		$this->it = gf()->reflection->property($this->c_orm,'it')->get();
+	}
+
+	public function into (array $insert): i_bindx
+	{
+		/**
+		 * @var c_array $insert
+		 */
+		$insert = gf()->fun->array->new_with_array($insert);
+		if ($this->c_orm->is_field_name_ok(...$insert->keys()
+			->get()) === FALSE)
+		{
+			gf()->exception->throw(130004,'failed to check field validation status');
+		}
+
+		if ($insert->count() === 0)
+		{
+			gf()->exception->throw(130000,'You will get an error when passing an empty array to the ORM insert method');
+		}
+
+		$sql = "insert into " . $this->c_orm->get_table_name() . "(";
+		$insert->for_each(function ($k , $v) use ( &$sql)
+		{
+			$sql .= $k . ",";
+		});
+		$sql = rtrim($sql,',') . ") values (";
+		$insert->for_each(function ($k , $v) use ( &$sql)
+		{
+			$sql .= '?,';
+		});
+		$sql = rtrim($sql,',') . ")";
+
+		/**
+		 * @var i_bindx $bindx
+		 */
+		$bindx = $this->it->query($sql);
+		$insert->for_each(function ($k , $v) use ( $bindx)
+		{
+			$bindx->ax($v);
+		});
+
+		$insert->free();
+		return $bindx;
+	}
+}
+
+class c_update extends c_base_class
+{
+	private c_orm $c_orm;
+	private c_trans $it;
+	private c_array $where;
+
+	public function __construct (\WeakReference $w)
+	{
+		$this->c_orm = $w->get();
+		$this->it = gf()->reflection->property($this->c_orm,'it')->get();
+		$this->where = gf()->reflection->property($this->c_orm,'where')->get();
 	}
 
 	/**
@@ -211,9 +299,7 @@ class c_update extends c_base_class
 		# update set ...
 		#
 		#
-		$data = $this->dc()->new();
-		$data->sql = "update " . $this->c_orm->get_table_name() . " set";
-		$update->for_each(function ($k , $v) use ( $data)
+		$data = $this->dc()->new();$data->sql = "update " . $this->c_orm->get_table_name() . " set";$update->for_each(function ($k , $v) use ( $data)
 		{
 			$data->sql .=  ' '.$k . ' = ? ,';
 		});
@@ -227,16 +313,15 @@ class c_update extends c_base_class
 		# bindx
 		#
 		#
-		$data->update = $update;$this->it->auto(function(i_trans $it) use($data) 
+		$data->update = $update;$data->bindx = $this->it->query($data->sql);$data->update->for_each(function ($k , $v) use ( $data)
 		{
-			/**
-			 * @var \hx\db\i_bindx $bindx
-			 */
-			$data->bindx = $this->it->query($data->sql);$data->update->for_each(function ($k , $v) use ( $data)
-			{
-				$data->bindx->ax($v);
-			});
+			$data->bindx->ax($v);
 		});
+		
+		# bind where parmaeter
+		#
+		#
+		$this->c_orm->get_where_bindx($data->bindx);
 	
 		$update->free();
 		
@@ -255,17 +340,12 @@ class c_table_metadata_description extends c_base_class
 		$this->c_orm = $w->get();
 	}
 
-	public function is_ok (): bool
-	{
-		return self::$md === NULL ? false : true;
-	}
-
 	public function get (): c_array
 	{
 		self::$md ??= gf()->fun->stdclass->new();
 		if (self::$md->exist($this->c_orm->get_table_name()) === FALSE)
 		{
-			self::$md->set($this->c_orm->get_table_name(),$this->c_orm->get_all_fields_in_current_table());
+			self::$md->set($this->c_orm->get_table_name()/* the full name of this table strictly contains a database prefix.*/,$this->c_orm->get_all_fields_in_current_table());
 		}
 		return self::$md->get($this->c_orm->get_table_name());
 	}
@@ -305,59 +385,9 @@ abstract class c_orm extends c_base_class
 	 * @throws	\Exception
 	 * 
 	 */
-	public function insert (array $insert): i_query
+	public function insert ( ): i_insert
 	{
-		$this->ini_db_config();
-
-		/**
-		 * @var c_array $insert
-		 */
-		$insert = gf()->fun->array->new_with_array($insert);if ($this->is_field_name_ok(...$insert->keys()->get()) === FALSE)
-		{
-			gf()->exception->throw(130004,'failed to check field validation status');
-		}
-
-		if ($insert->count() === 0)
-		{
-			gf()->exception->throw(130000,'You will get an error when passing an empty array to the ORM insert method');
-		}
-
-		$this->dc()->sql->insert = "insert into " . $this->get_table_name() . "(";
-		$insert->for_each(function ($k , $v)
-		{
-			$this->dc()->sql->insert .= $k . ",";
-		});
-		$this->dc()->sql->insert = rtrim($this->dc()->sql->insert,',') . ") values (";
-		$insert->for_each(function ($k , $v)
-		{
-			$this->dc()->sql->insert .= '?,';
-		});
-		$this->dc()->sql->insert = rtrim($this->dc()->sql->insert,',') . ")";
-		$this->dc()->sql->insert_status = null;
-
-		$this->it->auto(function (i_trans $it) use ( $insert)
-		{
-			/**
-			 * @var i_bindx $bindx
-			 */
-			$bindx = $it->query($this->dc()->sql->insert);
-			$insert->for_each(function ($k , $v) use ( $it , $bindx)
-			{
-				$bindx->ax($v);
-			});
-
-			try
-			{
-				$this->dc()->sql->insert_status = $bindx->go();
-			}
-			catch (\Throwable $e)
-			{
-				gf()->exception->throw_with_wrap(130001,$e);
-			}
-		});
-		$insert->free();
-
-		return $this->dc()->sql->insert_status;
+		return new c_insert($this->ini_db_config()->make_weak_reference());
 	}
 	/* > */
 	public function get_all_fields_in_current_table (): c_array
@@ -425,6 +455,17 @@ abstract class c_orm extends c_base_class
 		return new c_order_by($this->ini_db_config()->make_weak_reference());
 	}
 
+	public function get_where_bindx (i_bindx $bindx)
+	{
+		$this->where->for_each(function ($k , $v) use ( $bindx)
+		{
+			if (array_key_exists('v',$v))
+			{
+				$bindx->ax($v['v']);
+			}
+		});
+	}
+
 	public function select (): i_bindx
 	{
 		$this->ini_db_config();
@@ -441,15 +482,9 @@ abstract class c_orm extends c_base_class
 		 * @var i_bindx $bindx
 		 */
 		$bindx = $this->it->query($sql);
-
-		/* where
-		 * 
-		 */
-		$this->where->for_each(function ($k , $v) use ( $bindx)
-		{
-			$bindx->ax($v['v']);
-		});
+		$this->get_where_bindx($bindx);
 		$this->sql_free();
+
 		return $bindx;
 	}
 
@@ -613,7 +648,7 @@ abstract class c_orm extends c_base_class
 		$this->database_env_json_file_path ??= $this->on_set_open_with_env_json();
 		if ($this->connection_key === NULL)
 		{
-			$this->set_connnection_key($this->on_set_connnection_key());
+			$this->set_connection_key($this->on_set_connnection_key());
 		}
 
 		return $this->ini_sql()->ini_table_matedata_description();
@@ -640,7 +675,7 @@ abstract class c_orm extends c_base_class
 		return $this;
 	}
 
-	private function set_connnection_key (string $connection_key = 'default'): self
+	private function set_connection_key (string $connection_key = 'default'): self
 	{
 		$this->connection_key = in_array($connection_key,[ null,''],true) ? 'default' : $connection_key;
 		if ($this->db === NULL)

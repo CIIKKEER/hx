@@ -11,6 +11,8 @@ interface i_query_status
 	public function get_affected_rows (): int;
 
 	public function get_insert_id (): int;
+
+	public function get_information (): string;
 }
 
 interface i_bindx
@@ -37,7 +39,7 @@ interface i_bindx
 	 * @throws	Exception
 	 * 
 	 */
-	public function go (callable $on_go = null): i_query;
+	public function go (callable|bool $on_go = null): i_query;
 }
 
 interface i_query extends i_query_status

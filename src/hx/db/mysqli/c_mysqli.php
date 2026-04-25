@@ -214,14 +214,21 @@ class c_bind_parameter extends c_base_class implements i_bindx
 	 * 
 	 * 
 	 */
-	public function go (callable $on_go = null): i_query
+	public function go (callable|bool $on_go = null): i_query
 	{
 		try
 		{
 			/* < prepare to bind parameter */$this->trim_sql_comment_as_empty()->create_parameter_place_holder();$this->stmt = $this->mysqli->prepare($this->sqlx);$this->create_parameter_binding();/* > */
 			if ($on_go !== null)
 			{
-				$on_go("\n" . $this->get_sql_debug());
+				if ($on_go === TRUE)
+				{
+					gf()->exception->try(fn () => gf()->exception->throw(1000012,"-> DEBUG.GO \n" . $this->get_sql_debug() . "\n"))->die;
+				}
+				else if(is_callable($on_go))
+				{
+					$on_go("\n" . $this->get_sql_debug());
+				}
 			}
 
 			return new c_query($this->make_weak_reference());
@@ -423,11 +430,42 @@ class c_bind_parameter extends c_base_class implements i_bindx
 
 	public function ax (mixed $ax): self
 	{
-		match (gettype($ax)) {
+		$type = gettype($ax);
+		match ($type) {
 			"integer" , "bool" , "boolean" => $this->ai($ax) ,
 			"double" => $this->ad($ax) ,
 			"string" => $this->as($ax) ,
-			default => gf()->exception->throw(1000008,"the type of the bound variable is incorrect.\n")
+			"array" => (function ($ax)
+			{
+				if (count($ax) === 0)
+				{
+					return gf()->exception->throw(1000009,'the array count is empty');
+				}
+				else
+				{
+					foreach ($ax as $v)
+					{
+						if (is_array($v))
+						{
+							return gf()->exception->throw(1000010,'the element of an array is a nested array type');
+						}
+					}
+
+					/* i will check the types of the array elements and intelligently add binding parameters
+					 * 
+					 */
+					$ar_type = gettype($ax[0]);
+					match ($ar_type) {
+						"integer" , "bool" , "boolean" => $this->aia($ax) ,
+						"double" => $this->ada($ax) ,
+						"string" => $this->asa($ax) ,
+
+						default => gf()->exception->throw(1000011,'the array element type is incorrect')
+					};
+				}
+			})($ax) ,
+
+			default => gf()->exception->throw(1000008,"the type of the bound variable : " . $type . " is incorrect.\n")
 		};
 		return $this;
 	}
@@ -547,5 +585,10 @@ class c_query extends c_base_class implements i_query
 	public function get_insert_id (): int
 	{
 		return $this->bp->stmt->insert_id;
+	}
+
+	public function get_information (): string
+	{
+		return $this->bp->mysqli->info;
 	}
 }
