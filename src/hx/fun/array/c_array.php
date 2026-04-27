@@ -6,6 +6,7 @@ namespace hx\fun\array;
 use hx\c_base_class;
 use hx\c_ok_error;
 use hx\i_ok_error;
+use hx\fun\regx\c_regx;
 
 class c_array extends c_base_class
 {
@@ -146,6 +147,11 @@ class c_array extends c_base_class
 			$ar->push(...$v);
 		});
 		return $ar;
+	}
+
+	public function to_string_without_newlines (): string
+	{
+		return gf()->fun->regx->preg_replace('/\s+/',' ',str_replace([ "\t","\n","\r"],'',$this->to_string()));
 	}
 
 	public function to_string (): string

@@ -10,7 +10,7 @@ class c_exception
 
 	public function throw_with_string (string $s = '')
 	{
-		throw new \Exception(rtrim($s) . "\n");
+		throw new \Exception(rtrim($s) . "");
 	}
 
 	public function throw_with_exception (\Exception $e)
@@ -26,7 +26,7 @@ class c_exception
 	public function throw (int $error_code , string $s)
 	{
 		$this->throw_with_string('[' . gf()->fun->cc->yellow(strval($error_code))
-			->get() . '] ' . rtrim($s) . "\n");
+			->get() . '] ' . rtrim($s) . "");
 	}
 
 	/**
@@ -96,7 +96,7 @@ class c_exception
 
 						public function die ($error_code = 1111111111)
 						{
-							die('[' . gf()->fun->cc->yellow($error_code)->get() . ']->' . $this->e->getMessage() . "\n");
+							die('[' . gf()->fun->cc->yellow($error_code)->get() . "] -> message    : " . $this->e->getMessage() . " "."\n		file.name  : ".$this->e->getFile() ."\n		error.line : ".$this->e->getLine()."\n");
 						}
 					};
 				}

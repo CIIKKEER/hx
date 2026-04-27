@@ -77,17 +77,50 @@ class c_test extends c_base_class
 		 *
 		 */
 
-		gf()->fun->debug->print_r(
-		gf()->exception->try(fn () => $aaa->insert()
+		/* <
+		 * 
+		 */
+		gf()->exception->try 
+		(
+			fn () => gf()->fun->debug->print_r
+			(
+				1
+				//, $aaa->where()->and('age','=',21)->done()->delete()->done()->go()->get_affected_rows()
+// 	 			, $aaa->where()->and('id','=',1)->done()->select()->done()->go()->get_single_row()
+// 				,
+// 	 			"\n"
+ 				, $aaa->insert()->done(['name' => 'jack','age' => 21])->go()->get_insert_id()
+// 				, $aaa->insert()->done(['name' => 'jack.insert'.gf()->fun->cipher->rand->uuid()->v4(),'age' => 21])->go()->get_insert_id()
+// 				, $aaa->insert()->done(['name' => 'jack.insert'.gf()->fun->cipher->rand->uuid()->v4(),'age' => 21])->go()->get_insert_id()
+// 				, $aaa->insert()->done(['name' => 'jack.insert'.gf()->fun->cipher->rand->uuid()->v4(),'age' => 21])->go()->get_insert_id()
+// 				, $aaa->insert()->done(['name' => 'jack.insert'.gf()->fun->cipher->rand->uuid()->v4(),'age' => 21])->go()->get_insert_id()
+// 				, $aaa->where()->and('id', '=', 1)->done()->update()->done(['name'=>'jack.update','age'=>21])->go()->get_information()
+
+				
+				, $aaa->query->sql("select * from ".$aaa->get_table_name()." where name like ?")->as('jack%')->go()->get_single_row()
+				, $aaa->where()->and('name', 'like', 'jack%')->done()->select()->done()->go()->get_single_row()
+				, $aaa->where()->like('name', 'jack')->done()->select()->done()->go()->get_single_row()
+				, $aaa->where()->like_right('name', 'jack')->done()->select()->done()->go( )->get_single_row()
+				, $aaa->field('id')->where()->like_left('name', 'jack')->is_not_null('id')->between_and('id', 1, 1000000)->in('id', [963,1,2,3])->column('id','<','id+1')->raw('id>?')->done()->select()->done()->ai( 11)->go(  )->get_single_row()
+			)
+		)->die;
+		
+		
+		die();
+		/* > */
+
+		gf()->fun->debug->print_r(gf()->exception->try(fn () => $aaa->insert()
 			->into([ 'name' => 'jack.insert','age' => 21])
-			->go()->get_insert_id())->die,
-			
-			$aaa->where()->and('name', '=', 'jack.insert')->done()->order()->desc('id')->by()->select()->go()->get_single_row()
-			,
-						
-			
-			
-		gf()->exception->try(fn () => $aaa->where()
+			->go()
+			->get_insert_id())->die,$aaa->where()
+			->and('name','=','jack.insert')
+			->done()
+			->order()
+			->desc('id')
+			->by()
+			->select()
+			->go()
+			->get_single_row(),gf()->exception->try(fn () => $aaa->where()
 			->and('id','in',[ 1,2,3])
 			->and('id','is not null',null)
 			->or('id','is not null',NULL)
@@ -96,8 +129,7 @@ class c_test extends c_base_class
 			->and("(select count(*) from " . $aaa->get_table_name() . ")>0",null,null)
 			->or("id","between",0)
 			->and("","",1)
-			->
-		done()
+			->done()
 			->select()
 			->go()
 			->get_single_row())->die
@@ -112,7 +144,7 @@ class c_test extends c_base_class
 			,
 			$aaa->query->sql("select version()")->go()->get_single_row()
 			,
-			gf()->exception->try(fn()=>$aaa->where()->and('id', 'in',[1,2,3,])->and('id','is not null',null)->done()->update()->set(['name'=>'jack.name'])->go()->get_information())->die
+			gf()->exception->try(fn()=>$aaa->where()->and('id', 'in',[1,2,3,])->and('id','is not null',null)->done()->update()->done(['name'=>'jack.name'])->go()->get_information())->die
 				
 				
 			

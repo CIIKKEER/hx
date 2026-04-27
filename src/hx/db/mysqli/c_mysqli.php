@@ -225,7 +225,7 @@ class c_bind_parameter extends c_base_class implements i_bindx
 				{
 					gf()->exception->try(fn () => gf()->exception->throw(1000012,"-> DEBUG.GO \n" . $this->get_sql_debug() . "\n"))->die;
 				}
-				else if(is_callable($on_go))
+				else if (is_callable($on_go))
 				{
 					$on_go("\n" . $this->get_sql_debug());
 				}
@@ -475,6 +475,8 @@ class c_query extends c_base_class implements i_query
 {
 	private c_bind_parameter $bp;
 	private c_stdclass $data;
+	private int $affected_rows;
+	private int $insert_id;
 
 	/**
 	 * 
@@ -508,13 +510,12 @@ class c_query extends c_base_class implements i_query
 	{
 		try 
 		{
-			$r = $this->bp->stmt->execute();
-			$mr = $this->bp->stmt->get_result();
-			if ($mr !== false)
+			$this->bp->stmt->execute();	$mr = $this->bp->stmt->get_result();if ($mr !== false)
 			{
 				$this->mr = $mr;
 				$this->fetch_assoc();
 			}
+			$this->done();
 		}
 		catch (\Throwable $e)
 		{
@@ -524,6 +525,20 @@ class c_query extends c_base_class implements i_query
 		return $this;
 	}
 	/* > */
+	private function done (): self
+	{
+		$this->affected_rows = intval($this->bp->stmt->affected_rows);
+		$this->insert_id = $this->bp->stmt->insert_id;
+		if ($this->mr !== NULL)
+		{
+
+			$this->mr->close();
+			$this->bp->stmt->free_result();
+			$this->bp->stmt->close();
+		}
+		return $this;
+	}
+
 	private function fetch_assoc (): c_query
 	{
 		/* < get data */$i = 0;for (;;)
@@ -535,8 +550,7 @@ class c_query extends c_base_class implements i_query
 			$this->data->add(strval($i++), gf()->fun->stdclass->new_with_array($row));
 		}
 		/* > */
-		$this->mr->close();
-		$this->bp->stmt->close();
+
 		return $this;
 	}
 
@@ -579,12 +593,12 @@ class c_query extends c_base_class implements i_query
 
 	public function get_affected_rows (): int
 	{
-		return $this->bp->stmt->affected_rows;
+		return $this->affected_rows;
 	}
 
 	public function get_insert_id (): int
 	{
-		return $this->bp->stmt->insert_id;
+		return $this->insert_id;
 	}
 
 	public function get_information (): string

@@ -29,6 +29,12 @@ interface i_sql
 	public function sql (string $sql): i_bindx;
 }
 
+interface i_select
+{
+
+	public function done (): i_bindx;
+}
+
 interface i_where
 {
 
@@ -36,7 +42,55 @@ interface i_where
 
 	public function or (string $k , $x , $v): self;
 
+	public function like_left (string $k , mixed $v , bool $and_or = true): self;
+
+	public function like (string $k , mixed $v , bool $and_or = true): self;
+
+	public function like_right (string $k , mixed $v , bool $and_or = true): self;
+
+	public function is_null (string $k , bool $and_or = true): self;
+
+	public function is_not_null (string $k , bool $and_or = true): self;
+
+	public function between_and (string $k , $a , $b , bool $and_or = true): self;
+
+	public function in (string $k , array $v , bool $and_or = true): self;
+
+	public function not_in (string $k , array $v , bool $and_or = true): self;
+
+	public function column (string $a , string $x , string $b , bool $and_or = true): self;
+
+	public function raw (string $sql , bool $and_or = true): self;
+
 	public function done (): c_orm;
+}
+
+class c_select extends c_base_class implements i_select
+{
+	private c_orm $c_orm;
+	private c_trans $it;
+
+	public function __construct (\WeakReference $w)
+	{
+		$this->c_orm = $w->get();
+		$this->it = gf()->reflection->property($this->c_orm,'it')->get();
+	}
+
+	public function done (): i_bindx
+	{
+		$sql = '';
+		$sql .= "select ";
+		$sql .= " " . $this->c_orm->get_field();
+		$sql .= " " . $this->c_orm->get_from();
+		$sql .= " " . $this->c_orm->get_join();
+		$sql .= " " . $this->c_orm->get_where();
+		$sql .= " " . $this->c_orm->get_order_by();
+
+		$bindx = $this->it->query($sql);
+		$bindx = $this->c_orm->get_where_bindx($bindx);
+		$this->c_orm->sql_free();
+		return $bindx;
+	}
 }
 
 class c_where extends c_base_class implements i_where
@@ -137,9 +191,69 @@ class c_where extends c_base_class implements i_where
 
 		return $this->c_orm;
 	}
+
+	public function like_right (string $k , mixed $v , bool $and_or = true): self
+	{
+		return $and_or ? $this->and($k,'like',$v . '%') : $this->or($k,'like',$v . '%');
+	}
+
+	public function like_left (string $k , mixed $v , bool $and_or = true): self
+	{
+		return $and_or ? $this->and($k,'like','%' . $v) : $this->or($k,'like','%' . $v);
+	}
+
+	public function like (string $k , mixed $v , bool $and_or = true): self
+	{
+		return $and_or ? $this->and($k,'like','%' . $v . '%') : $this->or($k,'like','%' . $v . '%');
+	}
+
+	public function is_null (string $k , bool $and_or = true): self
+	{
+		return $and_or ? $this->and($k,'is null',null) : $this->or($k,'is null',null);
+	}
+
+	public function is_not_null (string $k , bool $and_or = true): self
+	{
+		return $and_or ? $this->and($k,'is not null',null) : $this->or($k,'is not null',null);
+	}
+
+	public function between_and (string $k , $a , $b , bool $and_or = true): self
+	{
+		return $and_or ? $this->and($k,'between',$a)->and('','',$b) : $this->or($k,'between',$a)->and('','',$b);
+	}
+
+	public function in (string $k , array $v , bool $and_or = true): self
+	{
+		return $and_or ? $this->and($k,'in',$v) : $this->or($k,'in',$v);
+	}
+
+	public function not_in (string $k , array $v , bool $and_or = true): self
+	{
+		return $and_or ? $this->and($k,'not in',$v) : $this->or($k,'not in',$v);
+	}
+
+	public function column (string $a , string $x , string $b , bool $and_or = true): self
+	{
+		return $and_or ? $this->and($a . ' ' . $x . ' ' . $b,'',null) : $this->or($a . ' ' . $x . ' ' . $b,'',null);
+	}
+
+	public function raw (string $sql , bool $and_or = true): self
+	{
+		return $and_or ? $this->and($sql,'',NULL) : $this->or($sql,"",NULL);
+	}
 }
 
-class c_order_by extends c_base_class
+interface i_order_by
+{
+
+	public function asc (string $order): self;
+
+	public function desc (string $order): self;
+
+	public function by (): c_orm;
+}
+
+class c_order_by extends c_base_class implements i_order_by
 {
 	private c_orm $c_orm;
 	private c_array $order_by;
@@ -168,7 +282,7 @@ class c_order_by extends c_base_class
 		return $this->c_orm->is_field_name_ok(...$field->get());
 	}
 
-	/**
+	/** <
 	 * 
 	 * @return c_orm
 	 * @throws \Exception
@@ -176,8 +290,7 @@ class c_order_by extends c_base_class
 	 */
 	public function by (): c_orm
 	{
-		$order_by_field = $this->order_by->column(0);
-		if ($this->is_orderby_field_name_ok($order_by_field) === FALSE)
+		$order_by_field = $this->order_by->column(0);if ($this->is_orderby_field_name_ok($order_by_field) === FALSE)/* > */
 		{
 			return gf()->exception->throw(130007,'the field name ' . $order_by_field->to_string() . 'in order by condition is incorrect');
 		}
@@ -189,13 +302,43 @@ class c_order_by extends c_base_class
 interface i_update
 {
 
-	public function set (array $set): i_bindx;
+	public function done (array $set): i_bindx;
 }
 
 interface i_insert
 {
 
-	public function into (array $insert): i_bindx;
+	public function done (array $insert): i_bindx;
+}
+
+interface i_delete
+{
+
+	public function done (): i_bindx;
+}
+
+class c_delete extends c_base_class implements i_delete
+{
+	private c_orm $c_orm;
+	private c_trans $it;
+
+	public function __construct (\WeakReference $w)
+	{
+		$this->c_orm = $w->get();
+		$this->it = gf()->reflection->property($this->c_orm,'it')->get();
+	}
+
+	public function done (): i_bindx
+	{
+		if (empty($this->c_orm->get_where()))
+		{
+			gf()->exception->throw(130008,'the condition of the deleted SQL statement is missing');
+		}
+
+		$bindx = $this->c_orm->get_where_bindx($this->it->query("delete from " . $this->c_orm->get_table_name() . " " . $this->c_orm->get_where()));
+		$this->c_orm->sql_free();
+		return $bindx;
+	}
 }
 
 class c_insert extends c_base_class implements i_insert
@@ -209,7 +352,7 @@ class c_insert extends c_base_class implements i_insert
 		$this->it = gf()->reflection->property($this->c_orm,'it')->get();
 	}
 
-	public function into (array $insert): i_bindx
+	public function done (array $insert): i_bindx
 	{
 		/**
 		 * @var c_array $insert
@@ -218,7 +361,7 @@ class c_insert extends c_base_class implements i_insert
 		if ($this->c_orm->is_field_name_ok(...$insert->keys()
 			->get()) === FALSE)
 		{
-			gf()->exception->throw(130004,'failed to check field validation status');
+			gf()->exception->throw(130009,'failed to check field validation status');
 		}
 
 		if ($insert->count() === 0)
@@ -248,21 +391,20 @@ class c_insert extends c_base_class implements i_insert
 		});
 
 		$insert->free();
+		$this->c_orm->sql_free();
 		return $bindx;
 	}
 }
 
-class c_update extends c_base_class
+class c_update extends c_base_class implements i_update
 {
 	private c_orm $c_orm;
 	private c_trans $it;
-	private c_array $where;
 
 	public function __construct (\WeakReference $w)
 	{
 		$this->c_orm = $w->get();
 		$this->it = gf()->reflection->property($this->c_orm,'it')->get();
-		$this->where = gf()->reflection->property($this->c_orm,'where')->get();
 	}
 
 	/**
@@ -272,15 +414,15 @@ class c_update extends c_base_class
 	 * @throws	\Exception
 	 * 
 	 */
-	public function set (array $set): i_bindx
+	public function done (array $set): i_bindx
 	{
 		/** <
 		 * 
 		 * @var c_array $update
 		 */
-		$update = gf()->fun->array->new_with_array($set);if ($this->c_orm->is_field_name_ok(...$update->keys()->get()) === FALSE)
+		$update = gf()->fun->array->new_with_array($set);$update_field_name =$update->keys(); if ($this->c_orm->is_field_name_ok(...$update_field_name->get()) === FALSE)
 		{
-			gf()->exception->throw(130004, 'failed to check field validation status');
+			gf()->exception->throw(130004, gf()->fun->cc->cyan($update_field_name->to_string_without_newlines())->get().' failed to check field validation status');
 		}
 
 		if ($update->count() === 0)
@@ -293,7 +435,7 @@ class c_update extends c_base_class
 		#
 		if(empty($this->c_orm->get_where()))
 		{
-			gf()->exception->throw(130004, 'the updated condition is missing');
+			gf()->exception->throw(130010, 'the updated condition is missing');
 		}
 		
 		# update set ...
@@ -308,7 +450,7 @@ class c_update extends c_base_class
 		# where condition
 		#
 		#
-		$data->sql.=$this->c_orm->get_where();
+		$data->sql.= $this->c_orm->get_where();
 		
 		# bindx
 		#
@@ -316,14 +458,10 @@ class c_update extends c_base_class
 		$data->update = $update;$data->bindx = $this->it->query($data->sql);$data->update->for_each(function ($k , $v) use ( $data)
 		{
 			$data->bindx->ax($v);
-		});
-		
-		# bind where parmaeter
-		#
-		#
+		});		
 		$this->c_orm->get_where_bindx($data->bindx);
 	
-		$update->free();
+		$update->free();$this->c_orm->sql_free();
 		
 		return $data->bindx;
 		/* > */
@@ -373,7 +511,7 @@ abstract class c_orm extends c_base_class
 	protected ?c_array $order_by = null;
 	protected ?c_array $join = null;
 
-	public function update (): c_update
+	public function update (): i_update
 	{
 		return new c_update($this->ini_db_config()->make_weak_reference());
 	}
@@ -387,7 +525,7 @@ abstract class c_orm extends c_base_class
 	 */
 	public function insert ( ): i_insert
 	{
-		return new c_insert($this->ini_db_config()->make_weak_reference());
+		return  new c_insert($this->ini_db_config()->make_weak_reference());
 	}
 	/* > */
 	public function get_all_fields_in_current_table (): c_array
@@ -397,19 +535,24 @@ abstract class c_orm extends c_base_class
 		 */
 		$ar = gf()->fun->array->new();$this->it->query("show fields from " . $this->get_table_name())->go()->for_each(function ($k , $v) use ( $ar)/* > */
 		{
-			$ar->push($v->get('Field'));
+			$ar->push($this->get_table_name() . '.' . $v->get('Field'));
 		});
 
 		return $ar;
 	}
 
-	public function is_field_name_ok (string ...$field): bool
+	public function is_field_name_ok (...$field): bool
 	{
 		/** <
 		 * @var c_array $all_fields
+		 * 
+		 * 
 		 */
+		
 		$all_fields = $this->tmd->get();foreach ($field as $v)/* > */
 		{
+			$ar_name = explode('.',$v);
+			$v = $this->get_table_name() . '.' . array_pop($ar_name);
 			if ($all_fields->search($v)->ok() === FALSE)
 			{
 				return false;
@@ -440,22 +583,24 @@ abstract class c_orm extends c_base_class
 			return '';
 		}
 
-		$order_by = 'order by ';
-		$this->order_by->for_each(function ($k , $v) use ( &$order_by)
+		/* < 
+		 * 
+		 */
+		$order_by = 'order by ';$this->order_by->for_each(function ($k , $v) use ( &$order_by)
 		{
-			$order_by .= gf()->fun->array->new_with_array($v)
-				->implode(' ') . ",";
+			$order_by .= gf()->fun->array->new_with_array($v)->implode(' ') . ",";
 		});
+		/* > */
 
 		return rtrim($order_by,',');
 	}
 
-	public function order (): c_order_by
+	public function order (): i_order_by
 	{
 		return new c_order_by($this->ini_db_config()->make_weak_reference());
 	}
 
-	public function get_where_bindx (i_bindx $bindx)
+	public function get_where_bindx (i_bindx &$bindx): i_bindx
 	{
 		$this->where->for_each(function ($k , $v) use ( $bindx)
 		{
@@ -464,31 +609,15 @@ abstract class c_orm extends c_base_class
 				$bindx->ax($v['v']);
 			}
 		});
-	}
-
-	public function select (): i_bindx
-	{
-		$this->ini_db_config();
-
-		$sql = '';
-		$sql .= "select ";
-		$sql .= " " . $this->get_field();
-		$sql .= " " . $this->get_from();
-		$sql .= " " . $this->get_join();
-		$sql .= " " . $this->get_where();
-		$sql .= " " . $this->get_order_by();
-
-		/**
-		 * @var i_bindx $bindx
-		 */
-		$bindx = $this->it->query($sql);
-		$this->get_where_bindx($bindx);
-		$this->sql_free();
-
 		return $bindx;
 	}
 
-	private function get_join (): string
+	public function select (): i_select
+	{
+		return new c_select($this->ini_db_config()->make_weak_reference());
+	}
+
+	public function get_join (): string
 	{
 		return $this->join->implode(' ');
 	}
@@ -538,7 +667,7 @@ abstract class c_orm extends c_base_class
 		return $this;
 	}
 
-	private function get_field (): string
+	public function get_field (): string
 	{
 		if ($this->field->count() === 0)
 		{
@@ -586,7 +715,12 @@ abstract class c_orm extends c_base_class
 		return $data->where_p->implode(' ');
 	}
 
-	public function where (): c_where
+	public function delete (): i_delete
+	{
+		return new c_delete($this->ini_db_config()->make_weak_reference());
+	}
+
+	public function where (): i_where
 	{
 		return new c_where($this->ini_db_config()->make_weak_reference());
 	}
@@ -623,7 +757,7 @@ abstract class c_orm extends c_base_class
 	 * <
 	 *  
 	 */
-	private function sql_free (): self
+	public function sql_free (): self
 	{
 		$this->join->free();$this->field->free();$this->from->free();$this->where->free();$this->order_by->free();$this->limit->free();$this->group_by->free();$this->dc()->del('sql');
 

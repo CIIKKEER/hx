@@ -14,6 +14,7 @@ use hx\fun\cipher\c_cipher;
 use hx\fun\time\c_time;
 use hx\fun\time\c_hrtime;
 use hx\fun\jwt\c_jwt;
+use hx\fun\regx\c_regx;
 
 /**
  * @property c_debug 			$debug
