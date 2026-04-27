@@ -56,7 +56,7 @@ class hx extends c_base_class
 
 class c_version extends c_base_class
 {
-	const version = '1.0.0';
+	const version = '1.0.66';
 	const author = 'BREEZZEER';
 	const email = 'lch1025@qq.com';
 	const license = 'Apache License';

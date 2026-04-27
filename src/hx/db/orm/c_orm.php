@@ -782,7 +782,7 @@ abstract class c_orm extends c_base_class
 		$this->database_env_json_file_path ??= $this->on_set_open_with_env_json();
 		if ($this->connection_key === NULL)
 		{
-			$this->set_connection_key($this->on_set_connnection_key());
+			$this->set_connection_key($this->on_set_connection_key());
 		}
 
 		return $this->ini_sql()->ini_table_matedata_description();
@@ -827,7 +827,7 @@ abstract class c_orm extends c_base_class
 		return gf()->config->mysql->get_mysql_config_env_file_path();
 	}
 
-	protected abstract function on_set_connnection_key (): string;
+	protected abstract function on_set_connection_key (): string;
 
 	protected abstract function on_db_driver (): i_db;
 }

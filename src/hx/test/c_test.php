@@ -14,7 +14,7 @@ use hx\db\i_bindx;
 class aaa extends c_orm
 {
 
-	protected function on_set_connnection_key (): string
+	protected function on_set_connection_key (): string
 	{
 		return '';
 	}
