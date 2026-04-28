@@ -973,5 +973,8 @@ abstract class c_orm extends c_base_class
 
 	protected abstract function on_set_connection_key (): string;
 
-	protected abstract function on_db_driver (): i_db;
+	protected function on_db_driver (): i_db
+	{
+		return gf()->db->mysqli;
+	}
 }
