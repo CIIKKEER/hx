@@ -96,7 +96,7 @@ class c_exception
 
 						public function die ($error_code = 1111111111)
 						{
-							die('[' . gf()->fun->cc->yellow($error_code)->get() . "] -> message    : " . $this->e->getMessage() . " "."\n		file.name  : ".$this->e->getFile() ."\n		error.line : ".$this->e->getLine()."\n");
+							die('[' . gf()->fun->cc->yellow($error_code)->get() . "] -> message    : " . $this->e->getMessage() . " "."\n		file.name  : ".$this->e->getFile() ."\n		error.line : ".gf()->fun->cc->pink($this->e->getLine())->get()."\n");
 						}
 					};
 				}

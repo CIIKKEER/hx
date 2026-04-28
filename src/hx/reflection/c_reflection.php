@@ -36,6 +36,14 @@ class c_reflection_property extends c_base_class implements i_reflection_propert
 
 	public function __construct (object $o , string $property)
 	{
+		// 		{
+		// 			$class = new \ReflectionClass($o);
+		// 			while (FALSE === $class->hasProperty($property))
+		// 			{
+		// 				$class = $class->getParentClass();
+		// 			}
+		// 			gf()->fun->debug->print_r($class->name)->die('sssssssssss');
+		// 		}
 		$this->o = $o;
 		$prop = new \ReflectionProperty($o::class,$property);
 		$prop->setAccessible(TRUE);

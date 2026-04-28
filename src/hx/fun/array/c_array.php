@@ -149,6 +149,11 @@ class c_array extends c_base_class
 		return $ar;
 	}
 
+	public function value_with_index (int $index): mixed
+	{
+		return $this->get()[$index];
+	}
+
 	public function to_string_without_newlines (): string
 	{
 		return gf()->fun->regx->preg_replace('/\s+/',' ',str_replace([ "\t","\n","\r"],'',$this->to_string()));

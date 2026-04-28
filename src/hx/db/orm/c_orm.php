@@ -29,10 +29,11 @@ interface i_sql
 	public function sql (string $sql): i_bindx;
 }
 
-interface i_select
+enum e_join_type
 {
-
-	public function done (): i_bindx;
+	case left;
+	case righ;
+	case inner;
 }
 
 interface i_where
@@ -52,7 +53,7 @@ interface i_where
 
 	public function is_not_null (string $k , bool $and_or = true): self;
 
-	public function between_and (string $k , $a , $b , bool $and_or = true): self;
+	public function between (string $k , $a , $b , bool $and_or = true): self;
 
 	public function in (string $k , array $v , bool $and_or = true): self;
 
@@ -62,10 +63,44 @@ interface i_where
 
 	public function raw (string $sql , bool $and_or = true): self;
 
-	public function done (): c_orm;
+	public function select (): i_bindx;
+
+	public function update (): i_update;
+
+	public function insert (): i_insert;
+
+	public function delete (): i_delete;
+
+	public function group (): i_group_by;
+
+	public function order (): i_order_by;
 }
 
-class c_select extends c_base_class implements i_select
+interface i_group_by
+{
+
+	public function by (string ...$fields): c_orm;
+}
+
+class c_group_by extends c_base_class implements i_group_by
+{
+	private c_orm $c_orm;
+	private c_array $group_by;
+
+	public function __construct (\WeakReference $w)
+	{
+		$this->c_orm = $w->get();
+		$this->group_by = gf()->reflection->property($this->c_orm,'group_by')->get();
+	}
+
+	public function by (string ...$fields): c_orm
+	{
+		$this->group_by->push(...$fields);
+		return $this->c_orm;
+	}
+}
+
+class c_select extends c_base_class
 {
 	private c_orm $c_orm;
 	private c_trans $it;
@@ -84,12 +119,58 @@ class c_select extends c_base_class implements i_select
 		$sql .= " " . $this->c_orm->get_from();
 		$sql .= " " . $this->c_orm->get_join();
 		$sql .= " " . $this->c_orm->get_where();
+		$sql .= " " . $this->c_orm->get_group_by();
 		$sql .= " " . $this->c_orm->get_order_by();
+		$sql .= " " . $this->c_orm->get_limit();
 
+		# bind parameter
+		#
+		#
 		$bindx = $this->it->query($sql);
 		$bindx = $this->c_orm->get_where_bindx($bindx);
+		$bindx = $this->c_orm->get_limit_bindx($bindx);
 		$this->c_orm->sql_free();
 		return $bindx;
+	}
+}
+
+interface i_limit
+{
+
+	public function offset (int $start , int $size): c_orm;
+}
+
+class c_limit extends c_base_class implements i_limit
+{
+	private c_orm $c_orm;
+	private c_array $limit;
+	private int $size;
+	private int $start;
+
+	public function __construct (\WeakReference $w)
+	{
+		$this->c_orm = $w->get();
+		$this->limit = gf()->reflection->property($this->c_orm,'limit')->get();
+		$this->size = 0;
+		$this->start = 0;
+	}
+
+	private function size (int $size): c_orm
+	{
+		$this->size = $size;
+		$this->limit->push($this->start,$this->size);
+		return $this->c_orm;
+	}
+
+	private function start (int $start): self
+	{
+		$this->start = $start;
+		return $this;
+	}
+
+	public function offset (int $start , int $size): c_orm
+	{
+		return $this->start($start)->size($size);
 	}
 }
 
@@ -137,16 +218,6 @@ class c_where extends c_base_class implements i_where
 	private function is_where_condition_keyword_ok (c_array $keyword): bool
 	{		 
 		return true;
-		// 		$data = gf()->fun->stdclass->new();$data->ok = true;$keyword->for_each(function ($k , $v) use ( $data)
-		// 		{
-		// 			if (self::$where_keyword->search($v)->ok() === FALSE)
-		// 			{
-		// 				$data->ok = false;
-		// 				return true;
-		// 			}
-		// 		});
-
-		return $data->ok; /* > */
 	}
 
 	/**
@@ -154,26 +225,8 @@ class c_where extends c_base_class implements i_where
 	 * 
 	 *  
 	 */
-	public function done (): c_orm
+	private function done (): c_orm
 	{
-		/* where condition keyword ok ? <
-		 * 
-		 */
-		// 		$where_k = $this->kxv->to_array()->column('p')->column(0);
-		// 		$where_v = $this->kxv->to_array()->column('p')->column(2);
-		// 		if ($this->is_where_condition_keyword_ok($where_k) === false || $this->is_where_condition_keyword_ok($where_v) === false)/* > */
-		// 		{
-		// 			return gf()->exception->throw(130006,'the field name ' . $where_k->to_string() . $where_v->to_string() . 'in the where keyword is incorrect');
-		// 		}
-
-		/* is the field name in the WHERE condition correct ? <
-		 * 
-		 */
-		// 		$ar_fields=$this->kxv->to_array()->column('p')->column(1);if ($this->c_orm->is_field_name_ok(...$ar_fields->get()) === FALSE)/* > */
-		// 		{
-		// 			return gf()->exception->throw(130005,'the field name :' . $ar_fields->to_string() . 'in the where condition is incorrect');
-		// 		}
-
 		/* make parameter place holder
 		 * 
 		 */
@@ -217,7 +270,7 @@ class c_where extends c_base_class implements i_where
 		return $and_or ? $this->and($k,'is not null',null) : $this->or($k,'is not null',null);
 	}
 
-	public function between_and (string $k , $a , $b , bool $and_or = true): self
+	public function between (string $k , $a , $b , bool $and_or = true): self
 	{
 		return $and_or ? $this->and($k,'between',$a)->and('','',$b) : $this->or($k,'between',$a)->and('','',$b);
 	}
@@ -240,6 +293,33 @@ class c_where extends c_base_class implements i_where
 	public function raw (string $sql , bool $and_or = true): self
 	{
 		return $and_or ? $this->and($sql,'',NULL) : $this->or($sql,"",NULL);
+	}
+	public function select (): i_bindx
+	{
+		return $this->done()->select();
+	}
+
+	public function update (): i_update
+	{
+		return $this->done()->update();
+	}
+
+	public function insert (): i_insert
+	{
+		return $this->done()->insert();
+	}
+
+	public function delete (): i_delete
+	{
+		return $this->done()->delete(); 
+	}
+	public function order (): i_order_by
+	{
+		return $this->done()->order();
+	}
+	public function group (): i_group_by
+	{
+		return $this->done()->group();
 	}
 }
 
@@ -502,10 +582,10 @@ abstract class c_orm extends c_base_class
 	private ?string $database_env_json_file_path = null;
 	private ?c_array $field = null;
 	private ?c_array $from = null;
-	private ?c_array $limit = null;
-	private ?c_array $group_by = null;
+	protected ?c_array $group_by = null;
 	private ?i_db $db = null;
 	private ?c_table_metadata_description $tmd = null;
+	protected ?c_array $limit = null;
 	protected ?c_array $where = null;
 	protected ?i_trans $it = null;
 	protected ?c_array $order_by = null;
@@ -566,6 +646,30 @@ abstract class c_orm extends c_base_class
 		return $this->database_name;
 	}
 
+	public function get_limit (): string
+	{
+		if ($this->limit->count() === 0)
+		{
+			return '';
+		}
+
+		return 'limit ?,?';
+	}
+
+	public function get_limit_bindx (i_bindx $bindx): i_bindx
+	{
+		/* <
+		 * 
+		 */
+		if ($this->limit->count() > 0)
+		{
+			$bindx->ax($this->limit->value_with_index(0))->ax($this->limit->value_with_index(1));
+		}
+		/* > */
+
+		return $bindx;
+	}
+
 	public function get_table_name (): string
 	{
 		if ($this->table_name === NULL)
@@ -612,9 +716,14 @@ abstract class c_orm extends c_base_class
 		return $bindx;
 	}
 
-	public function select (): i_select
+	public function limit (): i_limit
 	{
-		return new c_select($this->ini_db_config()->make_weak_reference());
+		return new c_limit($this->ini_db_config()->make_weak_reference());
+	}
+
+	public function select (): i_bindx
+	{
+		return (new c_select($this->ini_db_config()->make_weak_reference()))->done();
 	}
 
 	public function get_join (): string
@@ -629,6 +738,7 @@ abstract class c_orm extends c_base_class
 			private c_orm $c_orm;
 			private c_array $join;
 			private ?string $join_table = null;
+			private ?e_join_type $e_join_type = null;
 
 			public function __construct (\WeakReference $w)
 			{
@@ -639,12 +749,31 @@ abstract class c_orm extends c_base_class
 			public function left ($table)
 			{
 				$this->join_table = $table;
+				$this->e_join_type = e_join_type::left;
 				return $this;
 			}
 
-			public function on (string $ta , string $tb): c_orm
+			public function right ($table)
 			{
-				$this->join->push('left join ',$this->join_table," on ",$ta,' = ',$tb);
+				$this->join_table = $table;
+				$this->e_join_type = e_join_type::righ;
+				return $this;
+			}
+
+			public function inner ($table)
+			{
+				$this->join_table = $table;
+				$this->e_join_type = e_join_type::inner;
+				return $this;
+			}
+
+			public function on (string $a , string $b): c_orm
+			{
+				match ($this->e_join_type) {
+					e_join_type::left => $this->join->push('left join ',$this->join_table," on ",$a,' = ',$b) ,
+					e_join_type::righ => $this->join->push('right join ',$this->join_table," on ",$a,' = ',$b) ,
+					e_join_type::inner => $this->join->push('inner join ',$this->join_table," on ",$a,' = ',$b)
+				};
 
 				return $this->c_orm;
 			}
@@ -692,6 +821,21 @@ abstract class c_orm extends c_base_class
 		$this->ini_db_config()->from->push($table);
 
 		return $this;
+	}
+
+	public function group (): i_group_by
+	{
+		return new c_group_by($this->ini_db_config()->make_weak_reference());
+	}
+
+	public function get_group_by (): string
+	{
+		if ($this->group_by->count() === 0)
+		{
+			return '';
+		}
+
+		return ' group by ' . implode(',',$this->group_by->get());
 	}
 
 	public function get_where (): string
@@ -759,7 +903,8 @@ abstract class c_orm extends c_base_class
 	 */
 	public function sql_free (): self
 	{
-		$this->join->free();$this->field->free();$this->from->free();$this->where->free();$this->order_by->free();$this->limit->free();$this->group_by->free();$this->dc()->del('sql');
+		
+		$this->join->free();$this->field->free();$this->from->free();$this->where->free();$this->order_by->free();$this->limit->free();$this->group_by->free();
 
 		return $this;
 	}
@@ -767,12 +912,11 @@ abstract class c_orm extends c_base_class
 	{
 		$this->field 	??= gf()->fun->array->new();
 		$this->from 	??= gf()->fun->array->new();
+		$this->join 	??= gf()->fun->array->new();
 		$this->where 	??= gf()->fun->array->new();
 		$this->order_by ??= gf()->fun->array->new();
-		$this->limit 	??= gf()->fun->array->new();
 		$this->group_by ??= gf()->fun->array->new();
-		$this->join 	??= gf()->fun->array->new();
-		$this->order_by ??= gf()->fun->array->new();
+		$this->limit 	??= gf()->fun->array->new();
 		
 		return $this;
 	}

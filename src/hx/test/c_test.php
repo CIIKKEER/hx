@@ -86,22 +86,20 @@ class c_test extends c_base_class
 			(
 				1
 				//, $aaa->where()->and('age','=',21)->done()->delete()->done()->go()->get_affected_rows()
-// 	 			, $aaa->where()->and('id','=',1)->done()->select()->done()->go()->get_single_row()
+// 	 			, $aaa->where()->and('id','=',1)->done()->select()->go()->get_single_row()
 // 				,
 // 	 			"\n"
  				, $aaa->insert()->done(['name' => 'jack','age' => 21])->go()->get_insert_id()
-// 				, $aaa->insert()->done(['name' => 'jack.insert'.gf()->fun->cipher->rand->uuid()->v4(),'age' => 21])->go()->get_insert_id()
-// 				, $aaa->insert()->done(['name' => 'jack.insert'.gf()->fun->cipher->rand->uuid()->v4(),'age' => 21])->go()->get_insert_id()
-// 				, $aaa->insert()->done(['name' => 'jack.insert'.gf()->fun->cipher->rand->uuid()->v4(),'age' => 21])->go()->get_insert_id()
-// 				, $aaa->insert()->done(['name' => 'jack.insert'.gf()->fun->cipher->rand->uuid()->v4(),'age' => 21])->go()->get_insert_id()
-// 				, $aaa->where()->and('id', '=', 1)->done()->update()->done(['name'=>'jack.update','age'=>21])->go()->get_information()
+				, $aaa->where()->and('id', '=', 1)->update()->done(['name'=>'jack.update','age'=>21])->go()->get_information()
 
 				
 				, $aaa->query->sql("select * from ".$aaa->get_table_name()." where name like ?")->as('jack%')->go()->get_single_row()
-				, $aaa->where()->and('name', 'like', 'jack%')->done()->select()->done()->go()->get_single_row()
-				, $aaa->where()->like('name', 'jack')->done()->select()->done()->go()->get_single_row()
-				, $aaa->where()->like_right('name', 'jack')->done()->select()->done()->go( )->get_single_row()
-				, $aaa->field('id')->where()->like_left('name', 'jack')->is_not_null('id')->between_and('id', 1, 1000000)->in('id', [963,1,2,3])->column('id','<','id+1')->raw('id>?')->done()->select()->done()->ai( 11)->go(  )->get_single_row()
+ 				, $aaa->where()->and('name', 'like', 'jack%')->select()->go()->get_single_row()
+				, $aaa->where()->like('name', 'jack')->select()->go()->get_single_row()
+				, $aaa->where()->like_right('name', 'jack')->select()->go( )->get_single_row()
+				, $aaa->field('id')->where()->like_left('name', 'jack')->is_not_null('id')->between('id', 1, 1000000)->in('id', [963,1,2,3])->column('id','<','id+1')->raw('id>?')->select()->ai( 11)->go(  )->get_single_row()
+				, $aaa->from($aaa->get_table_name())->join()->inner("bbb")->on("aaa.id","bbb.id")->field('aaa.age','aaa.name','max(bbb.id) nx')->where()->and('aaa.id', '>', 1)->between('aaa.id', 1, 99999)->group()->by('aaa.id','aaa.name')->order()->asc('aaa.id')->by()->limit()->offset(0, 11)->select()->go()->get_single_row()
+				
 			)
 		)->die;
 		
@@ -109,64 +107,7 @@ class c_test extends c_base_class
 		die();
 		/* > */
 
-		gf()->fun->debug->print_r(gf()->exception->try(fn () => $aaa->insert()
-			->into([ 'name' => 'jack.insert','age' => 21])
-			->go()
-			->get_insert_id())->die,$aaa->where()
-			->and('name','=','jack.insert')
-			->done()
-			->order()
-			->desc('id')
-			->by()
-			->select()
-			->go()
-			->get_single_row(),gf()->exception->try(fn () => $aaa->where()
-			->and('id','in',[ 1,2,3])
-			->and('id','is not null',null)
-			->or('id','is not null',NULL)
-			->and('id','> 0 and id< (select max(id) from ' . $aaa->get_table_name() . ')',null)
-			->and('id','>',0)
-			->and("(select count(*) from " . $aaa->get_table_name() . ")>0",null,null)
-			->or("id","between",0)
-			->and("","",1)
-			->done()
-			->select()
-			->go()
-			->get_single_row())->die
-			/* <
-			 * 
-			 */
-			
-			,gf()->exception->try ( fn () => $aaa->field()->where()->and('id','=', 1)->and('age','=',21)->done()->order()->asc('id')->desc('age')->by()->select()->go()->get_single_row())->die
-		
-			,
-			$aaa->query()->sql("select now(),? as 'aaaaaaaaaaaa';")->ax(1000)->go()->get_single_row()
-			,
-			$aaa->query->sql("select version()")->go()->get_single_row()
-			,
-			gf()->exception->try(fn()=>$aaa->where()->and('id', 'in',[1,2,3,])->and('id','is not null',null)->done()->update()->done(['name'=>'jack.name'])->go()->get_information())->die
-				
-				
-			
-			
-			
-		
-			
-			
-			
-			//gf()->exception->try (fn () => $aaa->where()->and('id',1)->update()->set(['name'=>'jack.update'.gf()->fun->cipher->rand->uuid()->v4(),'age'=>21])->go()->get_affected_rows())->die
-
-		/* > */
-		// 			$aaa->field('id')->where()->and("'aaaaaaaaaaaa'",'?')->and(0, 0)->and('id', '>',0)->or("?", 100)->and(1, 'in',"(?)")->select()->as('aaaaaaaaaaaa')->ai(100)->aia([1,2,3])->go()->get_single_row()
-		// 			,$aaa->field('id')->where()->and("'aaaaaaaaaaaa'",'?')->and(0, 0)->and('id', '>',0)->or("?", 100)->and(1, 'in',"(?)")->select()->as('aaaaaaaaaaaa')->ai(100)->aia([1,2,3])->go()->get_single_row()
-		// 			,$aaa->field()->from("aaa left join bbb on aaa.id=bbb.id")->select()->go()->get_single_row()
-		// 			,$aaa->get_aaa_name_by_id(1)
-		// 			,gf()->config->mysql->get_mysql_config_env_file_path()
-		// 			,$aaa->field()->from('aaa as a')->join()->left('bbb as b')->on('a.id', 'b.id')->order()->asc('a.id')->by()->select()->go()->get_single_row()
-		// 			,$aaa->field()->order()->asc('id')->desc('name')->by()->select()->go()->get_single_row()
-		// 			,$aaa->order_by("id desc","name asc")->select()->go()->get_single_row()
-		);
-
+ 
 		return $this;
 	}
 
