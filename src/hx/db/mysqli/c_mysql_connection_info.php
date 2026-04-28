@@ -66,6 +66,11 @@ class c_mysql_connection_info extends c_base_class implements i_mysql_connection
 	{
 		return $this->get_mysql_with_key($k);
 	}
+
+	public function to_string (): string
+	{
+		return gf()->fun->cipher->md5->create(gf()->fun->debug->print_r_to_string($this));
+	}
 }
 
 interface i_mysql_connection_info
@@ -80,4 +85,6 @@ interface i_mysql_connection_info
 	public function user (): string;
 
 	public function password (): string;
+
+	public function to_string (): string;
 }

@@ -5,9 +5,13 @@ use hx\c_base_class;
 
 /**
  * 
- * @author Administrator
- * @property c_rand $rand
- *
+ * @author 		Administrator
+ * @property 	c_rand 			$rand
+ * @property 	c_md5			$md5
+ * 
+ * 
+ * 
+ * 
  */
 class c_cipher extends c_base_class
 {
@@ -15,9 +19,19 @@ class c_cipher extends c_base_class
 	public function __get ($k)
 	{
 		/* < */
-		return $this->ado('rand', c_rand::class	, $k)		
+		return $this->ado('rand', c_rand::class	, $k)
+					->ado('md5'	, c_md5::class	, $k)					
 					->$k;
 		/* > */
+	}
+}
+
+class c_md5 extends c_base_class
+{
+
+	public function create (string $s): string
+	{
+		return md5($s);
 	}
 }
 
@@ -41,7 +55,7 @@ class c_rand extends c_base_class
 
 			public function md5 (): string
 			{
-				return md5($this->v4);
+				return gf()->fun->cipher->md5->create($this->v4);
 			}
 
 			public function create (): string

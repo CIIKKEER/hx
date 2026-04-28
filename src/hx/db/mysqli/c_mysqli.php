@@ -23,6 +23,7 @@ use hx\db\i_query_status;
  */
 class c_mysqli extends c_base_class implements i_db
 {
+	private ?c_mysqli_connection_pool $pool = null;
 	public ?c_mysql_connection_info $m_mysql_connection_info = null;
 
 	/**
@@ -33,10 +34,7 @@ class c_mysqli extends c_base_class implements i_db
 
 	public function __destruct ()
 	{
-		if ($this->m_mysqli !== null)
-		{
-			$this->m_mysqli->close();
-		}
+		gf()->exception->try(fn () => $this->m_mysqli->close());
 	}
 
 	public function open_with_env_json (string $env_file_path): i_db
@@ -70,15 +68,27 @@ class c_mysqli extends c_base_class implements i_db
 	 */
 	private function open (c_mysql_connection_info $conn): c_mysqli
 	{
-		$this->m_mysqli = new \mysqli();
 
 		# mysqli::connect(?string $hostname=null, ?string $username=null, ?string $password=null, ?string $database=null, ?int $port=null, ?string $socket=null) : bool
 		#
 		#
 		try
 		{
-			$this->m_mysqli->connect($conn->ip(),$conn->user(),$conn->password(),$conn->database(),$conn->port());
-			$this->m_mysqli->set_charset('utf8mb4');
+			$this->pool ??= c_mysqli_connection_pool::new();
+			$ok = $this->pool->get($conn->to_string());
+			if ($ok === false)
+			{
+				$this->m_mysqli = new \mysqli();
+				$this->m_mysqli->connect($conn->ip(),$conn->user(),$conn->password(),$conn->database(),$conn->port());
+				$this->m_mysqli->set_charset('utf8mb4');
+				$this->pool->Set($conn->to_string(),$this->m_mysqli);
+				gf()->fun->test()->running_count('pool.new');
+			}
+			else
+			{
+				gf()->fun->test()->running_count('pool.ok');
+				$this->m_mysqli = $ok;
+			}
 		}
 		catch (\Throwable $e)
 		{

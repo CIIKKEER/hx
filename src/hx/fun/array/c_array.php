@@ -48,11 +48,6 @@ class c_array extends c_base_class
 		return $this;
 	}
 
-	/**
-	 * 
-	 * @param 	array $ar
-	 * @return 	c_array
-	 */
 	public function new_with_array (array $ar): c_array
 	{
 		$o = $this->new();
@@ -123,6 +118,15 @@ class c_array extends c_base_class
 		return implode($separator,$this->get());
 	}
 
+	public function del (string|int $k): self
+	{
+		if ($this->key_exists($k) === TRUE)
+		{
+			unset($this->get()[$k]);
+		}
+		return $this;
+	}
+
 	public function map (callable $on_map): self
 	{
 		$this->m_ar = array_map($on_map,$this->get());
@@ -149,14 +153,25 @@ class c_array extends c_base_class
 		return $ar;
 	}
 
-	public function value_with_index (int $index): mixed
+	public function value_with_index (int|string $index): mixed
 	{
-		return $this->get()[$index];
+		return array_key_exists($index,$this->get()) === true ? $this->get()[$index] : false;
 	}
 
 	public function to_string_without_newlines (): string
 	{
 		return gf()->fun->regx->preg_replace('/\s+/',' ',str_replace([ "\t","\n","\r"],'',$this->to_string()));
+	}
+
+	public function set (string|int $k , mixed $v): self
+	{
+		$this->get()[$k] = $v;
+		return $this;
+	}
+
+	public function key_exists ($k): bool
+	{
+		return array_key_exists($k,$this->get());
 	}
 
 	public function to_string (): string

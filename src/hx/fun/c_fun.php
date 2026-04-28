@@ -57,7 +57,7 @@ class c_fun extends c_base_class
 			public function running_count (string $tag = '')
 			{
 				static $i = 0;
-				gf()->fun->debug->echo_with_nl('[' . $tag . '] ' . $i++);
+				gf()->fun->debug->echo_with_nl('[' . gf()->fun->cc->new()->green($tag)->get() . '] ' . $i++);
 			}
 
 			public function elapse ()

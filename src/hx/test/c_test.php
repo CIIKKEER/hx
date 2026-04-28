@@ -16,7 +16,7 @@ class aaa extends c_orm
 
 	protected function on_set_connection_key (): string
 	{
-		return '';
+		return 'bbb';
 	}
 
 	protected function on_set_open_with_env_json (): string
@@ -42,6 +42,15 @@ class aaa extends c_orm
 			->go()
 			->get_single_value();
 	}
+}
+class bbb extends c_orm
+{
+	protected function on_set_connection_key (): string
+	{
+		return 'bbb';
+	}
+
+	
 }
 
 class c_test extends c_base_class
@@ -70,6 +79,7 @@ class c_test extends c_base_class
 	private function on_test_db_orm (): self
 	{
 		$aaa = aaa::new();
+		$bbb = bbb::new();
 
 		/**
 		 *
@@ -100,13 +110,15 @@ class c_test extends c_base_class
 				, $aaa->field('id')->where()->like_left('name', 'jack')->is_not_null('id')->between('id', 1, 1000000)->in('id', [963,1,2,3])->column('id','<','id+1')->raw('id>?')->select()->ai( 11)->go(  )->get_single_row()
 				, $aaa->from($aaa->get_table_name())->join()->inner("bbb")->on("aaa.id","bbb.id")->field('aaa.age','aaa.name','max(bbb.id) nx')->where()->and('aaa.id', '>', 1)->between('aaa.id', 1, 99999)->group()->by('aaa.id','aaa.name')->order()->asc('aaa.id')->by()->limit()->offset(0, 11)->select()->go()->get_single_row()
 				
+				
+				,$bbb::new()->where()->and('id', '=', 36)->select()->go()->get_single_row()
+				,$bbb::new()->insert()->done(['user_id'=>1,'user_address'=>gf()->fun->cipher->rand->uuid()->v4()])->go()->get_insert_id()
+				
+				
 			)
 		)->die;
 		
-		
-		die();
 		/* > */
-
  
 		return $this;
 	}
