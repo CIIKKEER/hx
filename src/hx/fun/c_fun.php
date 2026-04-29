@@ -15,6 +15,7 @@ use hx\fun\time\c_time;
 use hx\fun\time\c_hrtime;
 use hx\fun\jwt\c_jwt;
 use hx\fun\regx\c_regx;
+use hx\fun\string\c_string;
 
 /**
  * @property c_debug 			$debug
@@ -27,7 +28,7 @@ use hx\fun\regx\c_regx;
  * @property c_time				$time
  * @property c_jwt				$jwt
  * @property c_regx				$regx
- * 
+ * @property c_string			$string
  *
  */
 class c_fun extends c_base_class
@@ -46,6 +47,7 @@ class c_fun extends c_base_class
 					->ado('time'		, c_time::class				, $k)
 					->ado('jwt'			, c_jwt::class				, $k)
 					->ado('regx'		, c_regx::class				, $k)
+					->ado('string'		, c_string::class			, $k)
 					->$k;
 		/* > */
 	}

@@ -31,9 +31,7 @@ class c_exception
 
 	/**
 	 * @desc 	set custome exception process callable handler
-	 * 
 	 * @param 	callable $on_set_exception_handler
-	 * 
 	 * @return 	c_exception
 	 * 
 	 **/
@@ -86,23 +84,41 @@ class c_exception
 							$this->e = $w->get();
 						}
 
-						public function catch (int $error_code = 9999999999 , callable $on_catch = null)
+						public function catch (callable $on_catch = null , int $error_code = 9999999999)
 						{
 							if ($this->e !== NULL)
 							{
-								$on_catch === null ? gf()->exception->throw_with_wrap($error_code,$this->e) : $on_catch($this->e);
+								$on_catch === null ? gf()->exception->throw_with_wrap($error_code,$this->e) : $on_catch($error_code,$this->e);
 							}
 						}
 
 						public function die ($error_code = 1111111111)
 						{
-							die('[' . gf()->fun->cc->yellow($error_code)->get() . "] -> message    : " . $this->e->getMessage() . " "."\n		file.name  : ".$this->e->getFile() ."\n		error.line : ".gf()->fun->cc->pink($this->e->getLine())->get()."\n");
+							die('[' . gf()->fun->cc->yellow($error_code)->get() . "] -> message    : " . $this->e->getMessage() . " " . "\n		file.name  : " . $this->e->getFile() . "\n		error.line : " . gf()->fun->cc->pink($this->e->getLine())
+								->get() . "\n");
 						}
 					};
 				}
 			}
 
+			/**
+			 * @desc	this magic method will return the correct result of the wrapped closure method after the user calls any method
+			 * @param 	string $k
+			 * @return 	mixed
+			 * 
+			 * 
+			 */
 			public function __get (string $k): mixed
+			{
+				return $this->get_correct_result_or_exception($k);
+			}
+
+			public function __call (string $k , array $v): mixed
+			{
+				return $this->get_correct_result_or_exception($k,$v);
+			}
+
+			private function get_correct_result_or_exception (string $k , array $v = null): mixed
 			{
 				if ($this->ok)
 				{
@@ -112,29 +128,15 @@ class c_exception
 				{
 					match ($k) {
 						'die' => $this->r->die() ,
-						'catch' => $this->catch() ,
+						'catch' => $this->r->catch(...$v) ,
+						default => $this->r->die($k) ,
 					};
 				}
 			}
 
-			public function __call (string $k , array $v): mixed
+			public function ok (): bool
 			{
-				if ($this->ok)
-				{
-					return $this->r;
-				}
-				else
-				{
-					if ($k === 'die')
-					{
-						return $this->r->die(...$v);
-					}
-
-					if ($k === 'catch')
-					{
-						return $this->r->catch(...$v);
-					}
-				}
+				return $this->ok;
 			}
 		};
 	}

@@ -4,6 +4,13 @@ namespace hx\db\mysqli;
 use hx\c_base_class;
 use hx\fun\array\c_array;
 
+/**
+ * 
+ * @desc 	This helper class supports MySQL connection pool reuse to avoid the client spending extra time when establishing a MySQL connection to a remote MySQL server. 
+ * @author 	Administrator
+ * 
+ * 
+ */
 class c_mysqli_connection_pool extends c_base_class
 {
 	private static ?c_array $pool = null;
@@ -24,33 +31,37 @@ class c_mysqli_connection_pool extends c_base_class
 	{
 		if ($this->get_pool()->key_exists($k) === FALSE)
 		{
-			gf()->fun->debug->print_r($k);
 			$this->set_pool($k,$mysqli);
 		}
 		return $this;
 	}
 
+	/* <
+	 * 
+	 */
 	public function get (string|int $k): \mysqli|bool
 	{
-		/** <
+		/** 
 		 * @var \mysqli $o
 		 */
 		$o = $this->get_pool()->value_with_index($k);if ($o === FALSE)
 		{
 			return false;
 		}
-
-		if ($o->ping() === FALSE/* mysql connection is died */)
+		if(gf()->exception->try (fn () => $o->query("select 1"))->ok()===false)
 		{
-			$this->close($o)->get_pool()->del($k);
-			
+			$this->free_one($k);
 			return false;
 		}
 
 		return $o;
-		/* > */
 	}
-
+	private function free_one(string |int$k):self
+	{
+		$this->close($this->get_pool()->value_with_index($k))->get_pool()->del($k);		
+		return $this;
+	}
+	/* > */
 	private function close (\mysqli $o): self
 	{
 		gf()->exception->try(fn () => $o->close());
@@ -63,6 +74,7 @@ class c_mysqli_connection_pool extends c_base_class
 		{
 			$this->close($v);
 		});
+		$this->get_pool()->free();
 		return $this;
 	}
 }

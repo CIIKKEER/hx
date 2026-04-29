@@ -63,7 +63,6 @@ class c_mysqli extends c_base_class implements i_db
 	 */
 	private function open (c_mysql_connection_info $conn): c_mysqli
 	{
-
 		# mysqli::connect(?string $hostname=null, ?string $username=null, ?string $password=null, ?string $database=null, ?int $port=null, ?string $socket=null) : bool
 		#
 		#

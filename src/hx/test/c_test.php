@@ -64,7 +64,11 @@ class c_test extends c_base_class
 	{
 		$this->on_test_cc();
 
-		$this->on_test_db_orm();
+		gf()->fun->debug->print_r(gf()->fun->test()->elapse()->diff_with_millisecond()->do( fn() =>	$this->on_test_db_orm())->echo());
+		
+		
+		
+		
 		die();
 		$this->on_test_db();
 		die();
@@ -86,6 +90,9 @@ class c_test extends c_base_class
 		 * @var i_db $db
 		 *
 		 */
+		
+		
+		
 
 		/* <
 		 * 
@@ -94,14 +101,9 @@ class c_test extends c_base_class
 		(
 			fn () => gf()->fun->debug->print_r
 			(
-				1
-				//, $aaa->where()->and('age','=',21)->done()->delete()->done()->go()->get_affected_rows()
-// 	 			, $aaa->where()->and('id','=',1)->done()->select()->go()->get_single_row()
-// 				,
-// 	 			"\n"
- 				, $aaa->insert()->done(['name' => 'jack','age' => 21])->go()->get_insert_id()
+				
+ 				 $aaa->insert()->done(['name' => 'jack','age' => 21])->go()->get_insert_id()
 				, $aaa->where()->and('id', '=', 1)->update()->done(['name'=>'jack.update','age'=>21])->go()->get_information()
-
 				
 				, $aaa->query->sql("select * from ".$aaa->get_table_name()." where name like ?")->as('jack%')->go()->get_single_row()
  				, $aaa->where()->and('name', 'like', 'jack%')->select()->go()->get_single_row()
