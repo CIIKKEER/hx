@@ -32,7 +32,7 @@ interface i_sql
 enum e_join_type
 {
 	case left;
-	case righ;
+	case right;
 	case inner;
 }
 
@@ -756,7 +756,7 @@ abstract class c_orm extends c_base_class
 			public function right ($table)
 			{
 				$this->join_table = $table;
-				$this->e_join_type = e_join_type::righ;
+				$this->e_join_type = e_join_type::right;
 				return $this;
 			}
 
@@ -771,7 +771,7 @@ abstract class c_orm extends c_base_class
 			{
 				match ($this->e_join_type) {
 					e_join_type::left => $this->join->push('left join ',$this->join_table," on ",$a,' = ',$b) ,
-					e_join_type::righ => $this->join->push('right join ',$this->join_table," on ",$a,' = ',$b) ,
+					e_join_type::right => $this->join->push('right join ',$this->join_table," on ",$a,' = ',$b) ,
 					e_join_type::inner => $this->join->push('inner join ',$this->join_table," on ",$a,' = ',$b)
 				};
 

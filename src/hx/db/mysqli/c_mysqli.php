@@ -32,11 +32,6 @@ class c_mysqli extends c_base_class implements i_db
 	 */
 	public ?\mysqli $m_mysqli = null;
 
-	public function __destruct ()
-	{
-		gf()->exception->try(fn () => $this->m_mysqli->close());
-	}
-
 	public function open_with_env_json (string $env_file_path): i_db
 	{
 		try
@@ -82,11 +77,9 @@ class c_mysqli extends c_base_class implements i_db
 				$this->m_mysqli->connect($conn->ip(),$conn->user(),$conn->password(),$conn->database(),$conn->port());
 				$this->m_mysqli->set_charset('utf8mb4');
 				$this->pool->Set($conn->to_string(),$this->m_mysqli);
-				gf()->fun->test()->running_count('pool.new');
 			}
 			else
 			{
-				gf()->fun->test()->running_count('pool.ok');
 				$this->m_mysqli = $ok;
 			}
 		}

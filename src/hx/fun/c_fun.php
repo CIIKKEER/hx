@@ -27,6 +27,7 @@ use hx\fun\regx\c_regx;
  * @property c_time				$time
  * @property c_jwt				$jwt
  * @property c_regx				$regx
+ * 
  *
  */
 class c_fun extends c_base_class
@@ -54,10 +55,19 @@ class c_fun extends c_base_class
 		return new class() extends c_base_class
 		{
 
-			public function running_count (string $tag = '')
+			public function running ()
 			{
-				static $i = 0;
-				gf()->fun->debug->echo_with_nl('[' . gf()->fun->cc->new()->green($tag)->get() . '] ' . $i++);
+				return new class()
+				{
+
+					public function count (string $tag = '')
+					{
+						static $i = 0;
+						gf()->fun->debug->echo_with_nl('[' . gf()->fun->cc->new()
+							->green($tag)
+							->get() . '] ' . $i++);
+					}
+				};
 			}
 
 			public function elapse ()
