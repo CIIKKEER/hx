@@ -9,20 +9,25 @@ class c_jwt extends c_base_class
 {
 	private ?string $key = null;
 
-	public function set_key ($k): self
+	/**
+	 * @desc	your default JWT key string
+	 * @param 	string $k
+	 * @return 	self
+	 */
+	public function set_key (string $k): self
 	{
 		$this->key = $k;
 		return $this;
 	}
 
 	/**
-	 * 
+	 * @desc 	you can use the standard JWT component to encode the input payload data into an encrypted string
 	 * @param 	array $payload
 	 * @return 	string
 	 * @throws 	\Exception
 	 * 
 	 */
-	public function encoder_with_key (array $payload): string
+	public function encoder (array $payload): string
 	{
 		try
 		{
@@ -35,9 +40,9 @@ class c_jwt extends c_base_class
 	}
 
 	/**
-	 * 
+	 * @desc 	i will decode the encrypted JWT string content using the default key string. If the content is decoded successfully, a standard string will be returned, otherwise, the boolean value fasle will be returned 
 	 * @param 	string $jwt
-	 * @return 	mixed
+	 * @return 	mixed 		
 	 */
 	public function decoder (string $jwt): mixed
 	{
