@@ -91,7 +91,7 @@ class c_test extends c_base_class
 		 *
 		 */
 		
-		
+		gf()->fun->debug->print_r(gf()->version->about())->die;
 		
 
 		/* <

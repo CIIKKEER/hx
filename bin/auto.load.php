@@ -1,5 +1,10 @@
 <?php
-
+/* Copyright 2026 BREEZZEER
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ *
+ *
+ */
 /* < auto load vendor
  * 
  */

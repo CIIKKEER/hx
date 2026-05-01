@@ -1,4 +1,10 @@
 <?php
+/* Copyright 2026 BREEZZEER
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ *
+ *
+ */
 require_once __DIR__ . '/auto.load.php';
 
 use hx\c_base_class;
