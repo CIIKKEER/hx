@@ -1,6 +1,13 @@
 <?php
-declare(strict_types = 1)
-	;
+declare(strict_types = 1);
+
+/* Copyright 2026 BREEZZEER
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ *
+ */
+
+
 namespace hx\db\mysqli;
 
 use hx\db\i_db;
