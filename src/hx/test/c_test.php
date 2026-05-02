@@ -90,8 +90,11 @@ class c_test extends c_base_class
 		 * @var i_db $db
 		 *
 		 */
+		gf()->route->add('/test/about' ,function (i_request $r,i_response $s) { return $s->success('test.ok');});
 		
-		gf()->fun->debug->print_r(gf()->version->about())->die;
+		
+		
+		gf()->fun->debug->print_r(gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json')->get_db_information())->die('ok');
 		
 
 		/* <
@@ -130,6 +133,7 @@ class c_test extends c_base_class
 		gf()->route->get('/user/login',function ()
 		{
 		});
+		
 
 		gf()->fun->debug->print_r(gf()->route->get_route());
 		return $this;

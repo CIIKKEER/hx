@@ -25,8 +25,10 @@ Once installed, the global gf() function is your universal entry point. Here's t
 <?php
 require 'vendor/autoload.php';
 
-// Access version information directly as a property
-echo gf()->version->about()->version; // Outputs: 1.0.68
+/* Access version information directly as a property
+ *
+ */
+gf()->fun->debug->print_r(gf()->version->about())->die
 ```
 
 This single line demonstrates the core paradigm: you don't create or configure objects—you simply access them, and the tree assembles itself on demand.
@@ -38,8 +40,21 @@ What It Provides
 hx organizes all services as a lazy-loaded property tree. The root gf() provides access to:
 
 ```
-gf()                      // Root instance
+gf()                     // Root instance
 ├── fun                  // Functional utilities (stdclass, helpers)
+│   ├── json		 
+│   ├── strings          
+│   ├── array            
+│   ├── stdclass         
+│   ├── ...         
+│   ├── ...         
+│   ├── ...         
+│   ├── ...         
+│   ├── ...         
+│   ├── ...         
+│   ├── ...         
+│   ├── ...         
+│   └── regx             
 ├── db                   // Database factory
 │   ├── mysqli           // MySQLi driver
 │   └── pdo              // PDO driver
@@ -52,6 +67,16 @@ gf()                      // Root instance
 ├── route                // Routing engine
 ├── reflection           // Reflection tools
 ├── pay                  // Payment integration (WeChat, Alipay)
+├── ...			 	
+├── ...			 	
+├── ...			 	
+├── ...			 	
+├── ...			 	
+├── ...			 	
+├── ...			 	
+├── ...			 	
+├── ...			 	
+├── ...			 	
 └── exception            // Exception handler (auto-registers on first access)
 ```
 
@@ -64,39 +89,49 @@ Basic Usage Examples
 Database Query
 
 ```php
-// The entire database stack initializes only when you access ->db
-$result = gf()->db->mysqli
-    ->connect('default')
-    ->query('SELECT * FROM users WHERE id = ?')
-    ->ai(1)          // Bind integer parameter
-    ->go();          // Execute
+/* testing ...
+ *
+ */
+gf()->fun->debug->print_r (gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json')->get_db_information())->die('ok');
 
-// Iterate results
-$result->for_each(function(string $key, $row) {
+/* test db no transcation
+ *
+ */
+$db = gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json');$db->connect()->query("select version(),now();")->go()->for_each ( function($k,$v)
+{
+	gf()->fun->debug->print_r ($k,$v);
+});
+		
+/* The entire database stack initializes only when you access ->db
+ *
+ */ 
+$result = $db->query('SELECT * FROM users WHERE id = ?')->ai(1)/* bind integer parameter */->go()/* execute */->for_each ( function($k, $v)
+{
     echo $row->name;
 });
 ```
-
 Routing
 
 ```php
-gf()->route
-    ->get('/hello/{name}', function($name) {
-        return "Hello, $name!";
-    })
-    ->post('/submit', function() {
-        // handle POST
-    });
+gf()->route->add('/test/about' ,function (i_request $r,i_response $s) { return $s->success('test.ok');});
 ```
 
 Runtime Service Replacement (Mock/Test)
 
 ```php
-// Replace the database service with a mock at runtime
+/* Replace the database service with a mock at runtime
+ *
+ */
 gf()->ado_inject('db', new MyMockDatabase());
 
-// All subsequent code using gf()->db now uses your mock
-// No container rebuild, no configuration changes needed
+/* Simulate Redis injection using the new Redis library
+ *
+ */
+ gf()->cache->ado_inject('redis', c_redis_mock_test_inject::class);
+
+/* All subsequent code using gf()->db now uses your mock no container rebuild, no configuration changes needed
+ *
+ */
 ```
 
 Accessing the Data Container

@@ -50,6 +50,7 @@ use hx\pay\c_pay;
  * @property	c_reflection	$reflection
  * @property	c_pay			$pay
  *
+ * 
  <
  */
 class hx extends c_base_class

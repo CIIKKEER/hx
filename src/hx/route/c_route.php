@@ -1,4 +1,12 @@
 <?php
+declare(strict_types = 1)
+	;
+
+/* Copyright 2026 BREEZZEER
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ *
+ */
 namespace hx\route;
 
 use hx\c_base_class;
@@ -13,6 +21,7 @@ interface i_route_action
 	 * 
 	 * @param 	array $kv
 	 * @return 	self
+	 * 
 	 */
 	public function add_with_array (array $kv): self;
 
@@ -198,10 +207,7 @@ class c_route extends c_base_class implements i_route_action
 
 	public function get_route (): c_stdclass
 	{
-		if (self::$route === NULL)
-		{
-			self::$route = new c_stdclass();
-		}
+		self::$route ??= new c_stdclass();
 		return self::$route;
 	}
 
