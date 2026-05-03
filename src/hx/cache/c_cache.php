@@ -1,4 +1,11 @@
 <?php
+/* < */declare(strict_types = 1);/* > */
+
+/* Copyright 2026 BREEZZEER
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ *
+ */
 namespace hx\cache;
 
 use hx\c_base_class;
@@ -15,9 +22,6 @@ class c_cache extends c_base_class
 
 	public function __get ($k)
 	{
-		/* < */
-		return	$this->ado('redis', c_redis::class, $k)
-				->$k;
-		/* > */
+		return $this->ado('redis',c_redis::class,$k)->$k;
 	}
 }

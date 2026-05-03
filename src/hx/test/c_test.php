@@ -10,6 +10,7 @@ use hx\cache\redis\i_redis_type;
 use hx\cache\redis\c_redis;
 use hx\db\orm\c_orm;
 use hx\db\i_bindx;
+use Firebase\JWT\CachedKeySet;
 
 class aaa extends c_orm
 {
@@ -43,14 +44,14 @@ class aaa extends c_orm
 			->get_single_value();
 	}
 }
+
 class bbb extends c_orm
 {
+
 	protected function on_set_connection_key (): string
 	{
 		return 'bbb';
 	}
-
-	
 }
 
 class c_test extends c_base_class
@@ -63,12 +64,21 @@ class c_test extends c_base_class
 	public function go (): c_test
 	{
 		$this->on_test_cc();
+		
+		gf()->fun->debug->print_r(gf()->fun->file->ini->open_with_local_php_code_file(__DIR__ . '/../../../env/env.config'))->die;
+		;
+		
 
-		gf()->fun->debug->print_r(gf()->fun->test()->elapse()->diff_with_millisecond()->do( fn() =>	$this->on_test_db_orm())->echo());
-		
-		
-		
-		
+		$this->on_test_redis();
+		;
+		die();
+
+		gf()->fun->debug->print_r(gf()->fun->test()
+			->elapse()
+			->diff_with_millisecond()
+			->do(fn () => $this->on_test_db_orm())
+			->echo());
+
 		die();
 		$this->on_test_db();
 		die();
@@ -76,7 +86,6 @@ class c_test extends c_base_class
 		die();
 		$this->on_test_time();
 		die();
-		$this->on_test_redis();
 		return $this;
 	}
 
@@ -84,18 +93,24 @@ class c_test extends c_base_class
 	{
 		$aaa = aaa::new();
 		$bbb = bbb::new();
+		
+		
+		
+		
 
 		/**
 		 *
 		 * @var i_db $db
 		 *
 		 */
-		gf()->route->add('/test/about' ,function (i_request $r,i_response $s) { return $s->success('test.ok');});
-		
-		
-		
-		gf()->fun->debug->print_r(gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json')->get_db_information())->die('ok');
-		
+		gf()->route->add('/test/about',function (i_request $r , i_response $s)
+		{
+			return $s->success('test.ok');
+		});
+
+		gf()->fun->debug->print_r(gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json')
+			->get_db_information())
+			->die('ok');
 
 		/* <
 		 * 
@@ -124,7 +139,7 @@ class c_test extends c_base_class
 		)->die;
 		
 		/* > */
- 
+
 		return $this;
 	}
 
@@ -133,7 +148,6 @@ class c_test extends c_base_class
 		gf()->route->get('/user/login',function ()
 		{
 		});
-		
 
 		gf()->fun->debug->print_r(gf()->route->get_route());
 		return $this;
@@ -170,6 +184,9 @@ class c_test extends c_base_class
 		 */
 		gf()->cache->redis->new()->open_with_json_file(__DIR__ . '/../../../env/env.json')->connect_ex ( function(c_redis $r,i_redis_type $rt)
 		{
+			$r->s->set('sss','bbbbbbbbb');
+			$this->dc()->redis->s->push($r->s->get('sss'));
+			
 			$this->dc()->redis->s->push($r->s->get('aaa'));
 			$this->dc()->redis->s->push($rt->s()->get('aaa'));
 		});
@@ -186,7 +203,7 @@ class c_test extends c_base_class
 		
 		$this->dc()->redis->list->elapse =gf()->fun->test()->elapse()->diff_with_millisecond()->do ( function() use($redis)
 		{
-			for($i=0;$i<1000;$i++)
+			for($i=0;$i<100;$i++)
 			{
 				$redis->list->with_key('test')->push($i);
 			}
@@ -207,16 +224,17 @@ class c_test extends c_base_class
 			->push(1)
 			->push(2)
 			->push(3)
-			->for_each(function ($k , $v , $timeout)
-		{
-			gf()->fun->debug->print_r($k,$v,$timeout);
-			if ($timeout)
+			->for_each(function   ($k,$v)
 			{
-				return true;
-			}
-		});
+				gf()->fun->debug->print_r($k,$v);
+				if($v===null)
+				{
+					return true;
+				}
+			});
+			
+			gf()->fun->debug->print_r($this->dc()->redis);
 
-		gf()->fun->debug->print_r($this->dc()->redis);
 		return $this;
 	}
 

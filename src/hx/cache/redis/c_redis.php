@@ -1,9 +1,15 @@
 <?php
+/* < */declare(strict_types = 1);/* > */
+
+/* Copyright 2026 BREEZZEER
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ *
+ */
 namespace hx\cache\redis;
 
 use hx\c_base_class;
 use hx\fun\stdclass\c_stdclass;
-use Credis_Client;
 
 interface i_redis_type
 {
@@ -18,7 +24,7 @@ interface i_redis_set_get
 
 	public function set (string $k , $v): self;
 
-	public function get (string $k): mixed;
+	public function get (string $k);
 }
 
 interface i_redis_set_get_for_list
@@ -34,7 +40,7 @@ interface i_redis_set_get_for_list
 
 	/**
 	 *
-	 * @param callable (int $count,$v,bool timeout) : bool $on_for_each
+	 * @param callable (string $list_name,mixed $list_value) : bool $on_for_each
 	 * @return self
 	 * 
 	 */
@@ -61,12 +67,12 @@ interface i_redis_connect
 class c_redis extends c_base_class implements i_redis_connect
 {
 	private ?c_stdclass $config = null;
+	private ?c_stdclass $env_config_json = null;
 
 	/**
-	 * 
-	 * @var \Credis_Client $rc
+	 * @var \Redis $rc
 	 */
-	public ?\Credis_Client $rc = null;
+	public ?\Redis $rc = null;
 
 	public function __destruct ()
 	{
@@ -83,21 +89,22 @@ class c_redis extends c_base_class implements i_redis_connect
 	/* > */
 	public function close (): i_redis_connect
 	{
-		$this->rc === null ? null : $this->rc->close(true);
-
+		$this->rc === null ? null : $this->rc->close();
 		return $this;
 	}
 
 	public function open_with_json_file (string $file): self
 	{
-		$this->config = gf()->fun->file->ini->open_with_json($file);
+		$this->env_config_json = gf()->fun->file->ini->open_with_json($file);
 		return $this;
 	}
 
 	public function connect (string $k = 'default'): i_redis_type
 	{
-		$this->config = gf()->fun->stdclass->new_with_stdclass($this->config->redis->$k);
-		$this->rc = new \Credis_Client($this->config->host,$this->config->port,null,'',0,$this->config->password);
+		$this->config = gf()->fun->stdclass->new_with_stdclass($this->env_config_json->redis->$k);
+		$this->rc = new \Redis();
+		$this->rc->connect($this->config->host,$this->config->port,$this->config->timeout);
+		$this->rc->auth($this->config->password);
 
 		return $this->make_type_for_redis();
 	}
@@ -119,8 +126,8 @@ class c_redis extends c_base_class implements i_redis_connect
 	}
 
 	/**
-	 * @param	string $k
-	 * @param 	callable (c_redis $r,i_redis_type $rt) : void $on_connect_ex
+	 * @param 	callable 	(c_redis $r,i_redis_type $rt) : void $on_connect_ex
+	 * @param	string 		$k
 	 * @return 	self
 	 * 
 	 */
@@ -153,7 +160,7 @@ class c_redis_type extends c_base_class implements i_redis_type
 
 class c_redis_list extends c_base_class implements i_redis_set_get_for_list
 {
-	public c_redis_type $c_redis_type;
+	private c_redis_type $c_redis_type;
 	private string $k;
 
 	public function __construct (\WeakReference $c_redis_type , string $k)
@@ -163,7 +170,6 @@ class c_redis_list extends c_base_class implements i_redis_set_get_for_list
 	}
 
 	/**
-	 * 
 	 * 
 	 * @see \hx\cache\redis\i_redis_set_get_for_list::count()
 	 * @throws \Exception
@@ -185,18 +191,21 @@ class c_redis_list extends c_base_class implements i_redis_set_get_for_list
 		return $this;
 	}
 
+	/* < pop all data in the current list
+	 * 
+	 */
 	public function for_each (callable $on_for_each): self
 	{
 		for (;;)
 		{
-			/* < pop all data in the current list
-			 * 
-			 */
-			$v = $this->popb() ; $timeout = $v === false ? true : false;$ok = $on_for_each($this->count()/* list count */,$timeout===true ? '' : $v[1]/* value */,$timeout/* true : timeout */);if ($ok === TRUE)
+			$list_name = null;$list_value = null;$v = $this->popb() ;if (count($v) > 0)
+			{
+				list ($list_name, $list_value) = $v; 
+			}			
+			if(true === $on_for_each (strval($list_name),$list_value) || count($v)===0 )
 			{
 				break;
 			}
-			/* > */
 		}
 
 		return $this;
@@ -204,8 +213,13 @@ class c_redis_list extends c_base_class implements i_redis_set_get_for_list
 
 	public function popb (int $timeout = 1): mixed
 	{
-		return $this->c_redis_type->c_redis->rc->brPop($this->k,$timeout);
+		$r = $this->c_redis_type->c_redis->rc->brPop($this->k,$timeout);if (is_array($r) === false)
+		{
+			$r = [ ];
+		}
+		return $r;
 	}
+	/* > */
 
 	public function with_key (string $k): self
 	{
@@ -216,7 +230,7 @@ class c_redis_list extends c_base_class implements i_redis_set_get_for_list
 
 class c_redis_s extends c_base_class implements i_redis_set_get
 {
-	public c_redis_type $c_redis_type;
+	private c_redis_type $c_redis_type;
 
 	public function __construct (\WeakReference $c_redis_type)
 	{
@@ -229,9 +243,22 @@ class c_redis_s extends c_base_class implements i_redis_set_get
 		return $this;
 	}
 
-	public function get (string $k): mixed
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \hx\cache\redis\i_redis_set_get::get()
+	 * 
+	 */
+	public function get (string $k)
 	{
-		return $this->c_redis_type->c_redis->rc->get($k);
+		try
+		{
+			return $this->c_redis_type->c_redis->rc->get($k);
+		}
+		catch (\Throwable $e)
+		{
+			return gf()->exception->throw(60000001,$e->getMessage());
+		}
 	}
 }
 
