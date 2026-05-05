@@ -61,13 +61,34 @@ class c_test extends c_base_class
 	 */
 	private \mysqli $mysqli;
 
+	private function aaa ()
+	{
+		if (gf()->exception->try($this->aaaa(...),1,2)
+			->ok($r) === true)
+		{
+			dp($r)->die;
+			
+			
+		}
+		else
+		{
+			die('eeeeeeeeeeeeeeeeeee');
+		}
+	}
+
+	public function aaaa ($a , $b)
+	{
+		return 'ok.aaaaaaaaa';
+	}
+
 	public function go (): c_test
 	{
 		$this->on_test_cc();
-		
+
+		gf()->exception->try($this->aaa(...))->die;
+
 		gf()->fun->debug->print_r(gf()->fun->file->ini->open_with_local_php_code_file(__DIR__ . '/../../../env/env.config'))->die;
 		;
-		
 
 		$this->on_test_redis();
 		;
@@ -93,10 +114,6 @@ class c_test extends c_base_class
 	{
 		$aaa = aaa::new();
 		$bbb = bbb::new();
-		
-		
-		
-		
 
 		/**
 		 *

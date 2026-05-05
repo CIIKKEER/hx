@@ -107,7 +107,7 @@ $db = gf()->db->mysqli->open_with_env_json(__DIR__ . '/../../../env/env.json');$
  */ 
 $result = $db->query('SELECT * FROM users WHERE id = ?')->ai(1)/* bind integer parameter */->go()/* execute */->for_each ( function($k, $v)
 {
-    echo $row->name;
+    echo $v->name;
 });
 ```
 Routing

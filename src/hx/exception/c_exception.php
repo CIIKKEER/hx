@@ -1,8 +1,19 @@
 <?php
+/*
+ <
+ */
+declare(strict_types = 1);
+
+/* Copyright 2026 BREEZZEER
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ >
+ */
 namespace hx\exception;
 
 use hx\t_base_magic_method;
 use hx\fun\stdclass\c_stdclass;
+use hx\fun\debug\c_console_color;
 
 class c_exception
 {
@@ -30,6 +41,7 @@ class c_exception
 	}
 
 	/**
+	 * 
 	 * @desc 	set custome exception process callable handler
 	 * @param 	callable $on_set_exception_handler
 	 * @return 	c_exception
@@ -58,56 +70,68 @@ class c_exception
 		return $this;
 	}
 
-	public function try (callable $on_try): mixed
+	/**
+	 * 
+	 * @param 	callable    $on_try  : closure callable 
+	 * @param 	mixed       ...$args : these parameters will be unpacked and passed to the callable function
+	 * @return 	mixed
+	 * 
+	 */
+	public function try (callable $on_try , mixed ...$args): mixed
 	{
-		return new class(\WeakReference::create($on_try))
+		return new class(\WeakReference::create($on_try),...$args)
 		{
 			private mixed $r;
 			private bool $ok;
 
-			public function __construct (\WeakReference $w)
+			public function __construct (\WeakReference $w , ...$args)
 			{
 				try
 				{
-					$this->r = ($w->get())();
+					$this->r = ($w->get())(...$args);
 					$this->ok = true;
 				}
 				catch (\Throwable $e)
 				{
 					$this->ok = FALSE;
-					$this->r = new class(\WeakReference::create($e))
+					$this->r = new class($e)
 					{
 						private ?\Throwable $e = null;
 
-						public function __construct (\WeakReference $w)
+						public function __construct (\Throwable $e)
 						{
-							$this->e = $w->get();
+							$this->e = $e;
 						}
 
-						public function catch (callable $on_catch = null , int $error_code = 9999999999)
+						public function __destruct ()
+						{
+							unset($this->e);
+						}
+
+						public function catch ($on_catch , $error_code)
 						{
 							if ($this->e !== NULL)
 							{
-								$on_catch === null ? gf()->exception->throw_with_wrap($error_code,$this->e) : $on_catch($error_code,$this->e);
+								$on_catch === null ? gf()->exception->throw($error_code,$this->get_exception_info()) : $on_catch($error_code,$this->e);
 							}
 						}
 
-						public function die ($error_code = 1111111111)
+						private function get_exception_info ($error_code = null): string
 						{
-							die('[' . gf()->fun->cc->yellow($error_code)->get() . "] -> message    : " . $this->e->getMessage() . " " . "\n		file.name  : " . $this->e->getFile() . "\n		error.line : " . gf()->fun->cc->pink($this->e->getLine())
-								->get() . "\n");
+							return gf()->fun->cc->new()
+								->yellow($error_code ?? '')
+								->get() . "-> \n               message    : " . $this->e->getMessage() . " " . "\n	       file.name  : " . $this->e->getFile() . "\n	       error.line : " . gf()->fun->cc->pink(strval($this->e->getLine()))
+								->get();
+						}
+
+						public function die ($error_code)
+						{
+							die($this->get_exception_info('[' . $error_code . ']') . "\n");
 						}
 					};
 				}
 			}
 
-			/**
-			 * @desc	this magic method will return the correct result of the wrapped closure method after the user calls any method
-			 * @param 	string $k
-			 * @return 	mixed
-			 * 
-			 * 
-			 */
 			public function __get (string $k): mixed
 			{
 				return $this->get_correct_result_or_exception($k);
@@ -118,24 +142,31 @@ class c_exception
 				return $this->get_correct_result_or_exception($k,$v);
 			}
 
-			private function get_correct_result_or_exception (string $k , array $v = null): mixed
+			private function get_correct_result_or_exception (string $k , array $v = null)
 			{
 				if ($this->ok)
 				{
 					return $this->r;
 				}
-				else
+				if ($k === 'die')
 				{
-					match ($k) {
-						'die' => $this->r->die() ,
-						'catch' => $this->r->catch(...$v) ,
-						default => $this->r->die($k) ,
-					};
+					return $this->die();
 				}
 			}
 
-			public function ok (): bool
+			public function die ($error_code = 1111111111)
 			{
+				return $this->r->die($error_code);
+			}
+
+			public function catch (callable $on_catch = null , int $error_code = 9999999999)
+			{
+				return $this->r->catch($on_catch,$error_code);
+			}
+
+			public function ok (&$r = null): bool
+			{
+				$r = $this->r;
 				return $this->ok;
 			}
 		};
