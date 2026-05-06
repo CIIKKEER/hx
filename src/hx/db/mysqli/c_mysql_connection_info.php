@@ -16,7 +16,7 @@ use hx\c_base_class;
 class c_mysql_connection_info extends c_base_class implements i_mysql_connection_info
 {
 
-	public function set_mysql_connection_info ($conn): i_mysql_connection_info
+	public function set_mysql_connection_info (c_stdclass $conn): self
 	{
 		$this->m_mysql_connection_info = $conn->mysql;
 
@@ -76,7 +76,7 @@ class c_mysql_connection_info extends c_base_class implements i_mysql_connection
 interface i_mysql_connection_info
 {
 
-	public function set_mysql_connection_info ($conn): i_mysql_connection_info;
+	public function set_mysql_connection_info (c_stdclass $conn): i_mysql_connection_info;
 
 	public function ip (): string;
 

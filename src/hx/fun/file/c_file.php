@@ -1,4 +1,14 @@
 <?php
+/*
+ <
+ */
+declare(strict_types = 1);
+
+/* Copyright 2026 BREEZZEER
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ >
+ */
 namespace hx\fun\file;
 
 use hx\c_base_class;
@@ -64,4 +74,77 @@ class c_file extends c_base_class
 
 		return $this;
 	}
+
+	public function operate (): i_file_operate
+	{
+		return new c_file_operate($this->make_weak_reference());
+	}
 }
+
+class c_file_operate extends c_base_class implements i_file_operate
+{
+	private c_file $c_file;
+	private $fp = null;
+	private ?int $total_bytes_written = null;
+
+	public function __construct (\WeakReference $w)
+	{
+		$this->c_file = $w->get();
+	}
+
+	public function __destruct ()
+	{
+		$this->close();
+	}
+
+	public function close (): self
+	{
+		if (null === $this->fp)
+		{
+			return $this;
+		}
+
+		fclose($this->fp);
+		$this->fp = null;
+
+		return $this;
+	}
+
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see 			\hx\fun\file\i_file_operate::open($file_path)
+	 * @throws			\Exception : if the file path is not found , then throw a standard exception
+	 * 
+	 */
+	public function open (string $file_path , e_file_operate_mode $e_file_operate_mode): self
+	{
+		$file_path = $this->c_file->realpath($file_path);
+
+		/* reset total bytes written
+		 * 
+		 */
+		$this->total_bytes_written = 0;
+
+		/* open file with standard an operation mode
+		 * 
+		 */
+		$this->fp = fopen($file_path,$e_file_operate_mode->value);
+
+		return $this;
+	}
+
+	public function write (mixed $data): self
+	{
+		if (FALSE === fwrite($this->fp,$data))
+		{
+			gf()->exception->throw(2000001,'an error occurred when the data was written to the file.');
+		}
+		else
+		{
+		}
+
+		return $this;
+	}
+}
+

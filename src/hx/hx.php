@@ -34,6 +34,7 @@ use hx\fun\stdclass\c_stdclass;
 use hx\reflection\c_reflection;
 use hx\reflection\i_reflection_property;
 use hx\pay\c_pay;
+use hx\log\c_log;
 
 /**
  * @author 		Administrator
@@ -49,7 +50,7 @@ use hx\pay\c_pay;
  * @property	c_route			$route
  * @property	c_reflection	$reflection
  * @property	c_pay			$pay
- *
+ * @property	c_log			$log
  * 
  <
  */
@@ -68,6 +69,7 @@ class hx extends c_base_class
 					->ado('route'		, c_route::class													, $k)
 					->ado('reflection'	, c_reflection::class												, $k)
 					->ado('pay'			, c_pay::class														, $k)
+					->ado('log'			, c_log::class														, $k)
 					->ado('exception'	, function (){return (new c_exception())->set_exception_handler();}	, $k)
 					->$k;
 	}
