@@ -6,3 +6,4 @@ ghp_*
 vendor/
 /test
 /env
+/bin/test/log.data
