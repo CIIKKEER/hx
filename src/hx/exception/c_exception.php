@@ -161,7 +161,12 @@ class c_exception
 
 			public function catch (callable $on_catch = null , int $error_code = 9999999999)
 			{
-				return $this->r->catch($on_catch,$error_code);
+				if($this->ok===false)
+				{
+					return $this->r->catch($on_catch,$error_code);
+				}
+				
+				return $this;
 			}
 
 			public function ok (&$r = null): bool

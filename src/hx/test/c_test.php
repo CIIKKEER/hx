@@ -85,6 +85,14 @@ class c_test extends c_base_class
 
 	public function on_test_for_log():self
 	{
+		gf()->log->append_log_save_mode(gf()->log->new()->set_log_env_json_file(__DIR__ . '/../../../env/env.config')->set_log_save_mode(e_log_save_mode::file))
+				 ->append_log_save_mode(gf()->log->new()->set_log_env_json_file(__DIR__ . '/../../../env/env.config')->set_log_save_mode(e_log_save_mode::db)
+				 )
+				 ->save_with_multi_mode(e_log_level::error, "multi.mode.save.".gf()->fun->cipher->rand->uuid()->v4());
+		die;
+		
+		
+		
 		gf()->log->set_log_env_json_file(__DIR__ . '/../../../env/env.config')->set_log_save_mode(e_log_save_mode::db)->save(e_log_level::info, 'ddddddddddddddddddbbbbbbbbbbbbbb');die;
 		
 		gf()->log->set_log_env_json_file(__DIR__ . '/../../../env/env.config')->set_log_save_mode(e_log_save_mode::file)->save(e_log_level::info,[1,2,3])->save(e_log_level::tips, $this);
