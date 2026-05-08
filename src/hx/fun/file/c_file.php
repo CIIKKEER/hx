@@ -134,7 +134,7 @@ class c_file_operate extends c_base_class implements i_file_operate
 		if ($this->fp === FALSE)
 		{
 			$this->fp = null;
-			gf()->exception->throw(2000002,'an error ocurrus when open the file path : ' . $file_path);
+			gf()->exception->throw(2000002,'an error occurs when process try to open the file path : ' . $file_path);
 		}
 
 		return $this;
