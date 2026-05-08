@@ -83,9 +83,10 @@ class c_file extends c_base_class
 
 class c_file_operate extends c_base_class implements i_file_operate
 {
+	private bool $enable_file_lock = false;
 	private c_file $c_file;
 	private $fp = null;
-	private ?int $total_bytes_written = null;
+	private int $total_bytes_written = 0;
 
 	public function __construct (\WeakReference $w)
 	{
@@ -99,7 +100,7 @@ class c_file_operate extends c_base_class implements i_file_operate
 
 	public function close (): self
 	{
-		if (null === $this->fp)
+		if (is_resource($this->fp) === false || null === $this->fp)
 		{
 			return $this;
 		}
@@ -130,20 +131,68 @@ class c_file_operate extends c_base_class implements i_file_operate
 		 * 
 		 */
 		$this->fp = fopen($file_path,$e_file_operate_mode->value);
+		if ($this->fp === FALSE)
+		{
+			$this->fp = null;
+			gf()->exception->throw(2000002,'an error ocurrus when open the file path : ' . $file_path);
+		}
 
 		return $this;
 	}
 
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see 			\hx\fun\file\i_file_operate::write()
+	 * @throws 			\Exception : the write method throws a standard exception to the caller when an error occurs while writing data to a file
+	 * 
+	 */
 	public function write (mixed $data): self
 	{
-		if (FALSE === fwrite($this->fp,$data))
+		if (is_resource($this->fp) === false)
+		{
+			gf()->exception->throw(2000003,'the file pointer is null');
+		}
+
+		/* file lock
+		 * 
+		 */
+		$ok = false;
+		$r = false;
+		try
+		{
+			if ($this->enable_file_lock === true && flock($this->fp,LOCK_EX) === false)
+			{
+				gf()->exception->throw(2000004,'an error occurs when the process requests a file lock');
+			}
+
+			$ok = true;
+			$r = fwrite($this->fp,$data);
+		}
+		finally 
+		{
+			$this->enable_file_lock === true && $ok === true ? flock($this->fp,LOCK_UN) : null;
+		}
+
+		if ($r === FALSE)
 		{
 			gf()->exception->throw(2000001,'an error occurred when the data was written to the file.');
 		}
-		else
-		{
-		}
 
+		$this->total_bytes_written += $r;
+
+		return $this;
+	}
+
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \hx\fun\file\i_file_operate::enable_file_lock()
+	 * 
+	 */
+	public function enable_file_lock (bool $on = true): self
+	{
+		$this->enable_file_lock = $on;
 		return $this;
 	}
 }

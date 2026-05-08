@@ -24,10 +24,13 @@ use hx\db\orm\c_orm;
  *
  * return [
  *              'log' => [
- *                              # log file path
- *                              #
- *                              #
- *                              'file' => __DIR__.'/../bin/test/log.data/test.log',
+ *                              # the log system uses a local file storage driver
+ *	 					 		#
+ *	 					 		#
+ *			 					'file' 	=> 	[ 
+ *	 											'path' 				=> __DIR__.'/../bin/test/log.data/test.log',
+ *	 											'enable_file_lock'	=> false
+ *	 										],
  *
  *                              # the JSON field log_data_table of this array is a standard mapping relation, in which each item is mapped to an actual table name, a log level, and a log data field in your database.
  *                              #
@@ -58,26 +61,6 @@ use hx\db\orm\c_orm;
  *
  >
  */
-enum e_log_save_mode
-{
-	case file;
-	case db;
-}
-
-interface i_log_save_mode
-{
-
-	public function save (e_log_level $log_level , mixed $data): self;
-}
-
-enum e_log_level
-{
-	case info;
-	case error;
-	case warning;
-	case tips;
-}
-
 class c_log extends c_base_class
 {
 	private ?i_log_save_mode $i_log_save_mode = null;
@@ -109,7 +92,7 @@ class c_log extends c_base_class
 			( 
 				function ()
 				{
-					return (new c_log_driver_with_file())->set_file_local_path($this->log_env_json->log->file);
+					return (new c_log_driver_with_file())->set_file_local_path($this->log_env_json->log->file->path)->enable_file_lock($this->log_env_json->log->file->enable_file_lock);
 				}
 			)()
 			,
@@ -298,6 +281,12 @@ class c_log_driver_with_file implements i_log_save_mode
 			$this->i_file_operate->close();
 			$this->i_file_operate = null;
 		}
+		return $this;
+	}
+
+	public function enable_file_lock (bool $on = TRUE): self
+	{
+		$this->i_file_operate->enable_file_lock($on);
 		return $this;
 	}
 
