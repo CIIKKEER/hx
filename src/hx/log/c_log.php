@@ -73,6 +73,26 @@ class c_log extends c_base_class
 		return $this;
 	}
 
+	public function warning (mixed $data): self
+	{
+		return $this->save(e_log_level::warning,$data);
+	}
+
+	public function error (mixed $data): self
+	{
+		return $this->save(e_log_level::error,$data);
+	}
+
+	public function tips (mixed $data): self
+	{
+		return $this->save(e_log_level::tips,$data);
+	}
+
+	public function info (mixed $data): self
+	{
+		return $this->save(e_log_level::info,$data);
+	}
+
 	public function set_log_save_mode (e_log_save_mode $e_log_save_mode): self
 	{
 		/* is the logger configuration file status ok ?

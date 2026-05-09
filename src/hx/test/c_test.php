@@ -89,7 +89,11 @@ class c_test extends c_base_class
 				 ->append_log_save_mode(gf()->log->new()->set_log_env_json_file(__DIR__ . '/../../../env/env.config')->set_log_save_mode(e_log_save_mode::db)
 				 )
 				 ->save_with_multi_mode(e_log_level::error, "multi.mode.save.".gf()->fun->cipher->rand->uuid()->v4());
-		die;
+
+		gf()->log->set_log_env_json_file(__DIR__ . '/../../../env/env.config')->set_log_save_mode(e_log_save_mode::db)->save(e_log_level::info, [22222,3])->info(['iiiiiiiiiiii']);
+				 
+				 
+		dp('log.save.ok');
 		
 		
 		
