@@ -85,7 +85,7 @@ class c_version extends c_base_class
 
 	public function about (): c_stdclass
 	{
-		return gf()->fun->stdclass->new_with_array(gf()->reflection->class($this)->getConstants());
+		return $this->hx()->fun->stdclass->new_with_array($this->hx()->reflection->class($this)->getConstants());
 	}
 }
 /* 

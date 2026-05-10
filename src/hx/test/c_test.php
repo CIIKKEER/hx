@@ -13,6 +13,7 @@ use hx\db\i_bindx;
 use Firebase\JWT\CachedKeySet;
 use hx\log\e_log_level;
 use hx\log\e_log_save_mode;
+use function couchbase\extension\version;
 
 class aaa extends c_orm
 {
@@ -55,7 +56,43 @@ class bbb extends c_orm
 		return 'bbb';
 	}
 }
-
+class c_inner_base_class extends c_base_class
+{
+	protected \WeakReference $pp;
+	public function __construct(\WeakReference $w  ) 
+	{
+		
+		$this->pp=$w;
+		
+	}
+}
+class c_xxx extends c_base_class
+{
+	public function aaaa()
+	{
+		return $this->hx()->version->about();
+	}
+	public function aaa()
+	{
+		$i=new class($this->make_weak_reference()) extends c_inner_base_class 
+		{
+			public function __get($k)
+			{
+				return $this->ado('xxx', new class(\WeakReference::create($this)) extends c_inner_base_class{}, $k)->$k;
+			}
+			
+			public function aaa ():self
+			{
+			
+				$this->hx()->fun->debug->print_r($this->pp->get()->aaaa());
+			
+				return $this;
+			}
+		};
+		
+		$i->aaa();
+	}
+}
 class c_test extends c_base_class
 {
 	/**
@@ -68,7 +105,7 @@ class c_test extends c_base_class
 		if (gf()->exception->try($this->aaaa(...),1,2)
 			->ok($r) === true)
 		{
-			dp($r)->die;
+			
 			
 			
 		}
@@ -83,8 +120,14 @@ class c_test extends c_base_class
 		return 'ok.aaaaaaaaa';
 	}
 
+
 	public function on_test_for_log():self
 	{
+		
+	 (new c_xxx())->aaa();
+		
+		
+		die;
 		gf()->log->append_log_save_mode(gf()->log->new()->set_log_env_json_file(__DIR__ . '/../../../env/env.config')->set_log_save_mode(e_log_save_mode::file))
 				 ->append_log_save_mode(gf()->log->new()->set_log_env_json_file(__DIR__ . '/../../../env/env.config')->set_log_save_mode(e_log_save_mode::db)
 				 )

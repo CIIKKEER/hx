@@ -22,7 +22,8 @@ abstract class c_base_class extends \stdClass
 	/**
 	 * @var \hx\fun\stdclass\c_stdclass $dc
 	 */
-	private ?c_stdclass $dc = null;
+	private ?c_stdclass 		$dc = null;
+	private ?\WeakReference		$hx = null;
 
 	public static function new ()
 	{
@@ -42,7 +43,7 @@ abstract class c_base_class extends \stdClass
 	 * @param 	string |callable|object 	$v	: value
 	 * @param	string 						$c 	: current request type
 	 * @return 	c_base_class
-	 * @throws	\Exception  When a class string is given but the class does not exist.
+	 * @throws	\Exception  					: when a class string is given but the class does not exist.
 	 *  
 	 *  
 	 *  
@@ -58,14 +59,29 @@ abstract class c_base_class extends \stdClass
 		}
 		return $this;
 	}
+	
+	/**
+	 * 
+	 * @desc	obtain the basic meta pointer of the property service tree
+	 * @return 	hx
+	 * 
+	 */
+	public function hx () : hx
+	{
+		$this->hx ??= \WeakReference::create(gf()/* it is a strong global reference to the singleton object */);
+		
+		return $this->hx->get();
+	}
 
 	/** 
+	 * 
 	 * @desc	it is a data container that is used to hold your temporary variable in the callable context of the caller
 	 * @return 	c_stdclass
+	 * 
 	 */
 	public function dc (): c_stdclass
 	{
-		return $this->dc === null ? (function () {$this->dc = gf()->fun->stdclass->new();return $this->dc;})() : $this->dc;
+		return $this->dc === null ? (function () {$this->dc = $this->hx()->fun->stdclass->new();return $this->dc;})() : $this->dc;
 	}
 
 	/** 
@@ -74,7 +90,7 @@ abstract class c_base_class extends \stdClass
 	 * @param 	string 						$k	: type
 	 * @param 	string |callable|object 	$v	: value
 	 * @return 	c_base_class
-	 * @throws	\Exception  When a class string is given but the class does not exist.
+	 * @throws	\Exception  					: when a class string is given but the class does not exist.
 	 *
 	 >
 	 */
