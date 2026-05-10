@@ -35,6 +35,7 @@ abstract class c_base_class extends \stdClass
 	}
 
 	/**
+	 * 
 	 * @author	BREEZZEER
 	 * @desc 	Attach the deferred object as a public property of the current object instance
 	 * @param 	string 						$k	: type
@@ -59,7 +60,7 @@ abstract class c_base_class extends \stdClass
 	}
 
 	/** 
-	 * @desc	data container
+	 * @desc	it is a data container that is used to hold your temporary variable in the callable context of the caller
 	 * @return 	c_stdclass
 	 */
 	public function dc (): c_stdclass

@@ -63,6 +63,7 @@ use hx\db\orm\c_orm;
  */
 class c_log extends c_base_class
 {
+	use t_log_save_x;
 	private ?i_log_save_mode $i_log_save_mode = null;
 	private ?c_stdclass $log_env_json = null;
 	private ?c_stdclass $save_with_multi_mode = null;
@@ -71,26 +72,6 @@ class c_log extends c_base_class
 	{
 		$this->i_log_save_mode = $i_log_save_mode;
 		return $this;
-	}
-
-	public function warning (mixed $data): self
-	{
-		return $this->save(e_log_level::warning,$data);
-	}
-
-	public function error (mixed $data): self
-	{
-		return $this->save(e_log_level::error,$data);
-	}
-
-	public function tips (mixed $data): self
-	{
-		return $this->save(e_log_level::tips,$data);
-	}
-
-	public function info (mixed $data): self
-	{
-		return $this->save(e_log_level::info,$data);
 	}
 
 	public function set_log_save_mode (e_log_save_mode $e_log_save_mode): self
