@@ -154,12 +154,12 @@ class c_exception
 				}
 			}
 
-			public function die ($error_code = 1111111111)
+			public function die ($error_code = 11111111)
 			{
 				return $this->r->die($error_code);
 			}
 
-			public function catch (callable $on_catch = null , int $error_code = 9999999999)
+			public function catch (callable $on_catch = null , int $error_code = 99999999)
 			{
 				if($this->ok===false)
 				{
