@@ -13,7 +13,7 @@ Install via Composer:
 composer require ciikkeer/hx
 ```
 
-Requirements: PHP 8.0+
+Requirements: PHP 8.1+
 
 ---
 
